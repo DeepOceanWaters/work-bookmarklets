@@ -108,7 +108,7 @@ const colorContraster = () => {
  */
 function formatRatio(ratioText) {
     let [left, right] = ratioText.split(':');
-    if (left.length > 2) left = left.substring(0, 2);
+    if (left.length > 4) left = left.substring(0, 4);
     return `${left}:1`;
 }
 colorContraster();
