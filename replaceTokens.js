@@ -1,4 +1,3 @@
-
 const tokens = {
     // ensure
     cctext: 'Ensure that normal text has at least a 4.5:1 color contrast against its background color, and that large-scale text has at least a 3:1 color contrast ratio against its background color',
@@ -53,6 +52,8 @@ const tokens = {
     labelre: `We recommend adding a native HTML LABEL element and programmatically associating it with the component using the LABEL's FOR attribute.`,
 
     focusrestrict: 'Typically, modal content restricts focus using JavaScript, where: \n- when moving focus forward while on the last element in the modal content, focus moves to the first focusable element in the modal content\n- when moving focus backwards while on the first element in the modal content, focus moves to the last focusable element in the modal content',
+
+    oninputre: 'We recommend either:\n- add a submit button and only update the content on submission\n- OR add text before these controls that notes that they will automatically update the associated content when their value is set'
 }
 
 const getRecommendation = (token) => {
@@ -69,6 +70,10 @@ const getTokenMatches = (text) => {
     return [...text.matchAll(tokenRegex)].map(x => [x[0], x[1]]);
 }
 
+/**
+ * Note that due to how the toolbox's widget works, only the text nodes should be replaced.
+ * @param {HTMLNode} node 
+ */
 const replaceAllTokens = (node) => {
     for (let child of node.childNodes) {
         // type of 3 === text node
@@ -76,27 +81,29 @@ const replaceAllTokens = (node) => {
             let text = child.nodeValue;
             let tokenMatches = getTokenMatches(text);
             // for each token replace with recommendation
-            let parent = document.createElement('div');
+            node.textContent = '';
+            let processedText = text;
             for (let [originalText, token] of tokenMatches) {
-                let spanNode;
+                let withValue = false;
+                if (token === 'helpvalue') {
+                    withValue = true;
+                    token = 'help';
+                }
                 if (token === 'help') {
-                    spanNode = document.createElement('ul');
-                    let allOptions = listAllOptions();
+                    let allOptions = listTokens(withValue);
+                    let optionsText = '';
                     for(const option of allOptions) {
-                        let li = document.createElement('li');
-                        li.textContent = option;
-                        spanNode.appendChild(li);
+                        optionsText += option + '\n';
                     }
+                    processedText = processedText.replaceAll('help', optionsText);
                     console.log(allOptions);
                 }
                 else {
                     let recommendation = getRecommendation(token) || `(couldn't find ${token})`;
-                    spanNode = document.createElement('span');
-                    spanNode.textContent = text.replace(originalText, recommendation);
+                    processedText = processedText.replace(processedText, recommendation);
                 }
-                parent.append(spanNode);
             }
-            child.replaceWith(parent);
+            node.append(processedText);
         }
         else {
             replaceAllTokens(child);
@@ -109,21 +116,16 @@ const addRecommendation = () => {
     replaceAllTokens(recommendationEditor);
 }
 
-const listTokens = () => {
+const listTokens = (withValue = false) => {
+    let tokenList = [];
     let tokenNames = Object.keys(tokens).sort();
     for (let token of tokenNames) {
-        console.log(`[${token}] ${tokens[token].substring(0, 10)}...`);
+        let text = `${token}`;
+        if (withValue) text += `: ${tokens[token].substring(0, 25)}...`;
+        tokenList.push(text);
     }
-}
-
-const listAllOptions = (withValue = false) => {
-    let options = [];
-    for(const tokenName in tokens) {
-        let text = tokenName;
-        if (withValue) text += ': ' + tokens[tokenName];
-        options.push(text);
-    }
-    return options;
+    console.log(tokenList);
+    return tokenList;
 }
 
 const main = () => {
