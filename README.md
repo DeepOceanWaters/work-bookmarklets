@@ -10,3 +10,39 @@ Important note: Due to toolbox quirkiness, the following should be done in order
 
 # exposeAltText
 A simplistic way of visually exposing the alt text of images. Caution should be taken as the alt text is exposed in a simplistic manner - for example alt text provided in text near the image is not going to be caught as alt text.
+
+# exposeElement
+Takes a space delineated list of CSS selectors, and uses CSS ::before pseudo-elements to try and expose the elements that match the CSS selectors.
+
+# exposeLabels
+Similar to the other expose functions/bookmarklets, this uses CSS to visually identify when components have been given the ARIA-LABEL attribute.
+
+# isLargeScale
+This function is also present in the microlib. It will print in the console the color, text size, font-weight, and whether it is large-scale text or not. As a bookmarklet, it only is able to check the currently focused element. When called as part of the microlib, it can check any element (typically I use $0 to select the currently selected element in the inspector (for Chrome, I'm not sure if this is available in FireFox).
+
+# microlib
+A small collection of functions that, when this bookmarklet is activated, are added to the window object. It lists the functions available. 
+
+# openPages
+While viewing an issue in toolbox, opens each selected page.
+
+# recordAudit
+Saves changes made to various textareas in case the toolbox reloads when trying to submit and issue. 
+
+# reloadAudit
+Reloads the changes saved by recordAudit.
+
+# replaceBaseURL
+Relates to openPages. Sometimes clients use a different base url (probably due to changing dev environments in someway). This allows users to replace the base url of a previous link with the new base url. Specifically when using openPages.
+
+# scrollTo
+If an issue is selected, it should provide the issue's number relative to the page (e.g. 1-100). If given a number, the page will scroll to the table row that corresponds to the given issue number.
+
+# showHeadings
+Similar to expose functions. Visually exposes headings, accounts for ROLE=HEADING. Headings may or may not be visually exposed depending on the webpage's styles, but usually there isn't an issue.
+
+# styleToolbox
+Adds some basic styling to the various multi-selects that help me more easily use these controls.
+
+# switchPage
+Switches between the first and second page of an audit in the toolbox. Audits almost never go above 200 issues. So far I have not had a single instance where I needed to view a third page.
