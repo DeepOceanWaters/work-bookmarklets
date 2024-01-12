@@ -153,13 +153,18 @@ const functionsToAdd = [
     getDupeIds,
     getSelector,
     getElStyle
-]
+];
 
 const addFuncToWindow = (callback) => {
+    const fallbackName = "microlib";
+    window[fallbackName] = {};
     if (window.hasOwnProperty(callback.name)) {
-        throw new Error('Window already has a function called ' + callback.name);
+        console.warn('Window already has a function called ' + callback.name + ', renaming to micro.' + callback.name);
+        window[fallbackName][callback.name] = callback;
     }
-    window[callback.name] = callback;
+    else {
+        window[callback.name] = callback;
+    }
 }
 
 
