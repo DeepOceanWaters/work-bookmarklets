@@ -102,6 +102,10 @@ const tokens = {
         value: "We recommend either:\n- Adding a visually hidden SPAN element with text content that describes the purpose of this component\n- Adding the attribute ARIA-LABEL with a value that describes the purpose of this component\n- Adding the attribute ARIA-LABELLEDBY with a value equal to the ID of an element that has text content that describes the purpose of this component"
     },
 
+    headingre: {
+        value: "We recommend converting this text into a HEADING element of the appropriate level."
+    },
+
     scrollableregion: {
         value: "We recommend wrapping this content in an element with the following properties:\n- ROLE=REGION\n- TABINDEX=0\n- ARIA-LABEL or ARIA-LABELLEDBY to provide an accessible name that describes the region"
     },
@@ -120,6 +124,18 @@ const tokens = {
 
     statusfull: {
         value: "We recommend adding a live region and updating this live region with the text of the status message.\n\nLive regions can be created by adding the ARIA-LIVE attribute with a value of either POLITE or ASSERTIVE to an element. The following ROLES have an implicit ARIA-LIVE attribute value:\n- ROLE=STATUS (implicit ARIA-LIVE value of POLITE)\n- ROLE=ALERT (implicit ARIA-LIVE value of ASSERTIVE)\n\nNote that users agents need time to register live regions before they can be used. As such, we recommend that all live regions are added to the DOM as soon as the page loads. If the live region is added dynamically, then a delay will need to be implemented before any change is made to that live region to ensure that it has been registered by all user agents and works as intended."
+    },
+
+    onhover: {
+        value: "Ensure that when content appears on hover/focus, that content can be dismissed without moving the pointer or focus."
+    },
+
+    onhoverre: {
+        value: "We recommend either:\n- allow users to dismiss this content by pressing the Escape key\n- AND/OR allow users to dismiss this content by pressing the Control key"
+    },
+
+    focuscolor: {
+        value: "Ensure that focus indicators have at least a 3:1 color contrast against adjacent colors."
     },
 
     errors: {
