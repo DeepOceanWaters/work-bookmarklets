@@ -79,7 +79,7 @@ const tokens = {
     },
 
     focusvisible: {
-        value: "Ensure that content in focus has a visible focus indicator."
+        value: "Ensure that content in focus has a visible focus indicator, and the focus indicator has at least a 3:1 color contrast ratio against adjacent colors."
     },
 
     focusmodal: {
@@ -184,6 +184,15 @@ const getRecommendation = (token) => {
     }
 }
 
+const getResources = (token) => {
+    if (!(token in tokens)) {
+        console.log(`token not found (${token})`);
+    }
+    else {
+        return tokens[token].resources || [];
+    }
+}
+
 const getTokenMatches = (text) => {
     let tokenRegex = /~~(.+?)(\n|;|$)/gi;
     return [...text.matchAll(tokenRegex)].map(x => [x[0], x[1]]);
@@ -215,7 +224,12 @@ const replaceAllTokens = (node) => {
                 }
                 else {
                     let recommendation = getRecommendation(token) || `(couldn't find ${token})`;
+                    let resources = getResources(token);
                     processedText = processedText.replace(processedText, recommendation);
+                    if (resources?.length) processedText += '\n\n';
+                    for(const resource of resources) {
+                        processedText += '\n' + resource;
+                    }
                 }
             }
             node.append(processedText);
