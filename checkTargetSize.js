@@ -45,6 +45,8 @@
     const id = "expose-target-size";
     const overlayId = 'expose-target-size-overlay';
     const overlayClass = 'target-size-overlay-container';
+    const elementBoxClass = 'element-box-thingy';
+    const targetSizeClass = 'target-size-box-thingy';
     let parent2child = {};
 
     
@@ -56,6 +58,8 @@
         if (stylesheet || overlay) {
             stylesheet?.remove();
             overlay?.remove();
+            let overlays = [...document.querySelectorAll(`.${overlayClass}`)];
+            overlays.forEach(e => e.remove());
             return false;
         }
         // create overlay sheet
@@ -70,7 +74,7 @@
         let ruleItems = focusableElementNames.reduce((prev, cur) => `${prev}, ${cur}::before`, '[dummy-text-ignore-please]');
         let parentItems = focusableElementNames.reduce((prev, cur) => `${prev}, ${cur}`, '[dummy-text-ignore-please]');
         let targetSizeRule =
-            `.target-size {`
+            `.${targetSizeClass} {`
             + ` position: absolute;`
             + ` background: white;`
             + ` border: 2px solid black;`
@@ -81,7 +85,7 @@
             + ` transform: translate(-50%, -50%);`
             + `}`;
         let elementBoxRule =
-            `.element-box {`
+            `.${elementBoxClass} {`
             + ` position: absolute;`
             + " background: rgba(0,0,0,0.8)!important;"
             + `}`;
@@ -106,9 +110,9 @@
     const getClosestNonStaticPositionedElement = (element) => {
         let position = 'static';
         while (position === 'static' && element !== document.documentElement) {
+            element = element.parentElement;
             let style = window.getComputedStyle(element);
             position = style.getPropertyValue('position');
-            element = element.parentElement;
         }
         // should we return null, or just return the html element?
         return [element, position];
@@ -137,14 +141,13 @@
 
         for(const [parentSelector, children] of Object.entries(parent2child)) {
             let parent = document.querySelector(parentSelector);
+            console.log('parents', parentSelector, parent);
             let overlay = makeOverlay(parent);
             for(const child of children) {
                 let targetSizeBox = makeTargetSize(child, parent);
                 overlay.appendChild(targetSizeBox);
             }
         }
-
-        overlay.appendChild(targetSizeBox);
     }
 
     const makeOverlay = (element) => {
@@ -154,8 +157,8 @@
         try {
         element.appendChild(overlay);
         } catch(e) {
-            console.log(element);
-            console.log(overlay);
+            console.log('elle', element);
+            console.log('overlay', overlay);
             throw e;
         }
         return overlay;
@@ -164,14 +167,13 @@
     const makeTargetSize = (element, parentElement) => {
         let elementBox = document.createElement('div');
         let targetSize = document.createElement('div');
-        elementBox.classList.add('element-box');
-        targetSize.classList.add('target-size');
+        elementBox.classList.add(elementBoxClass);
+        targetSize.classList.add(targetSizeClass);
         elementBox.appendChild(targetSize);
 
         let elementBoxSizing = window.getComputedStyle(element).getPropertyValue('box-sizing');
         let elementRect = element.getBoundingClientRect();
         let parentRect = parentElement.getBoundingClientRect();
-        console.log(elementRect);
         //let parentElementRect = element.getBoundingClientRect();
         // set element box location
         let top = elementRect.top - parentRect.top;
