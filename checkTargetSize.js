@@ -6,13 +6,12 @@
         let selectorUniqueAttrs = ''; // id, class e.g. tagname#spots.dog
         let selectorAttrs = ''; // where css uses brackets e.g. tagname[data-dog-name="spots"]
         let usedAttrs = [];
-        if (element.id) selectorUniqueAttrs += `#${element.id}`;
+        if (element.id) selectorUniqueAttrs += `#${element.id.trim()}`;
         for (const attr of [...element.attributes]) {
-            selectorAttrs += `[${attr.name}="${attr.value}"]`;
+            selectorAttrs += `[${attr.name}="${attr.value.trim()}"]`;
             usedAttrs.push(attr.name);
             if (document.querySelectorAll(selector + selectorUniqueAttrs + selectorAttrs).length === 1) break;
         }
-    
         return element.tagName + selectorUniqueAttrs + selectorAttrs;
     }
     
@@ -45,60 +44,10 @@
     ];
     const id = "expose-target-size";
     const overlayId = 'expose-target-size-overlay';
+    const overlayClass = 'target-size-overlay-container';
+    let parent2child = {};
 
-    const exposeTargetSize = () => {
-        let stylesheet = document.getElementById(id);
-        let overlay = document.getElementById(overlayId);
-        if (stylesheet || overlay) {
-            stylesheet?.remove();
-            overlay?.remove();
-            return;
-        }
-        //const radius = "0.35rem";
-        //let element = prompt('element(s) to expose (separate via comma, space, or semi-colon)');
-        //const focusableElementNames = element.split(/[,| |;]+/gi).map(elName => elName.trim());
-
-        stylesheet = document.createElement('style');
-        stylesheet.id = id;
-        document.head.appendChild(stylesheet);
-        let ruleItems = focusableElementNames.reduce((prev, cur) => `${prev}, ${cur}::before`, '[dummy-text-ignore-please]');
-        let parentItems = focusableElementNames.reduce((prev, cur) => `${prev}, ${cur}`, '[dummy-text-ignore-please]');
-        let genRule =
-            `${ruleItems} { `
-            + ` content: '';`
-            + ` width: 24px;`
-            + ` height: 24px;`
-            + ` display: block;`
-            + ` top: 50%;`
-            + ` left: 50%;`
-            + ` transform: translate(-50%, -50%);`
-            + " position: absolute!important;"
-            + " background: rgba(0,0,0,0.8)!important;"
-            + "}";
-        let parentRule =
-            `${parentItems} { `
-            + ` position: relative!important;`
-            + "}";
-        let targetSizeRule =
-            `.target-size {`
-            + ` position: absolute;`
-            + ` background: white;`
-            + ` border: 2px solid black;`
-            + ` width: 20px;`
-            + ` height: 20px`
-            + ` top: 50%;`
-            + ` left: 50%;`
-            + ` transform: translate(-50%, -50%);`
-            + `}`;
-        let elementBoxRule =
-            `.element-box {`
-            + ` position: absolute;`
-            + " background: rgba(0,0,0,0.8)!important;"
-            + `}`;
-        stylesheet.sheet.insertRule(genRule);
-        stylesheet.sheet.insertRule(parentRule);
-        stylesheet.sheet.insertRule(targetSizeRule);
-    }
+    
     // new stuff
 
     const setupCSSstyleSheets = () => {
@@ -137,13 +86,13 @@
             + " background: rgba(0,0,0,0.8)!important;"
             + `}`;
         let overlayRule =
-            `#${overlayId} {`
-            + 'position: absolute;'
-            + 'z-index: 1000000;'
-            + 'top: 0;'
-            + 'bottom: 0;'
-            + 'left: 0;'
-            + 'right: 0;'
+            `.${overlayClass} {`
+            + ' position: absolute;'
+            + ' z-index: 1000000;'
+            + ' top: 0;'
+            + ' bottom: 0;'
+            + ' left: 0;'
+            + ' right: 0;'
             + '}';
         document.documentElement.style.position = 'relative!important';
         // add rules
@@ -162,7 +111,7 @@
             element = element.parentElement;
         }
         // should we return null, or just return the html element?
-        return element === document.documentElement ? null : [element, position];
+        return [element, position];
     }
 
     const exposeTargetSizeNew = () => {
@@ -178,10 +127,38 @@
         // create a target size element based on 
         // for each focusable element:
         for (const focusableElement of focusableElements) {
-            let targetSizeBox = makeTargetSize(focusableElement);
-            overlay.appendChild(targetSizeBox);
+            let [parent, positionType] = getClosestNonStaticPositionedElement(focusableElement);
+            let parentSelector = getSelector(parent);
+            if (!(parentSelector in parent2child)) {
+                parent2child[parentSelector] = [];
+            } 
+            parent2child[parentSelector].push(focusableElement);
         }
 
+        for(const [parentSelector, children] of Object.entries(parent2child)) {
+            let parent = document.querySelector(parentSelector);
+            let overlay = makeOverlay(parent);
+            for(const child of children) {
+                let targetSizeBox = makeTargetSize(child, parent);
+                overlay.appendChild(targetSizeBox);
+            }
+        }
+
+        overlay.appendChild(targetSizeBox);
+    }
+
+    const makeOverlay = (element) => {
+        console.log(element);
+        let overlay = document.createElement('div');
+        overlay.classList.add(overlayClass);
+        try {
+        element.appendChild(overlay);
+        } catch(e) {
+            console.log(element);
+            console.log(overlay);
+            throw e;
+        }
+        return overlay;
     }
 
     const makeTargetSize = (element, parentElement) => {
@@ -193,15 +170,18 @@
 
         let elementBoxSizing = window.getComputedStyle(element).getPropertyValue('box-sizing');
         let elementRect = element.getBoundingClientRect();
+        let parentRect = parentElement.getBoundingClientRect();
         console.log(elementRect);
         //let parentElementRect = element.getBoundingClientRect();
         // set element box location
-        elementBox.style.top = elementRect.top + 'px';
-        elementBox.style.left = elementRect.left + 'px';
+        let top = elementRect.top - parentRect.top;
+        let left = elementRect.left - parentRect.left;
+        elementBox.style.top = top + 'px';
+        elementBox.style.left = left + 'px';
         elementBox.style.width = elementRect.width + 'px';
         elementBox.style.height = elementRect.height + 'px';
         elementBox.addEventListener('click', () => {
-            console.log(getSelector(element).replaceAll('&quot;', "'"));
+            console.log(getSelector(element));
             console.log(element);
         });
 
