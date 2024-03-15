@@ -38,7 +38,7 @@
         `select:not([disabled]):not([tabindex='-1'])`,
         `textarea:not([disabled]):not([tabindex='-1'])`,
         `button:not([disabled]):not([tabindex='-1'])`,
-        `iframe:not([tabindex='-1'])`,
+        /*`iframe:not([tabindex='-1'])`, //removing iframe as they are often large an annoying*/
         `[tabindex]:not([tabindex='-1'])`,
         `[contentEditable=true]:not([tabindex='-1'])`
     ];
@@ -47,7 +47,7 @@
     const overlayClass = 'target-size-overlay-container';
     const elementBoxClass = 'element-box-thingy';
     const targetSizeClass = 'target-size-box-thingy';
-    let parent2child = {};
+    let parent2child = new Map();
 
     
     // new stuff
@@ -132,16 +132,13 @@
         // for each focusable element:
         for (const focusableElement of focusableElements) {
             let [parent, positionType] = getClosestNonStaticPositionedElement(focusableElement);
-            let parentSelector = getSelector(parent);
-            if (!(parentSelector in parent2child)) {
-                parent2child[parentSelector] = [];
+            if (!parent2child.has(parent)) {
+                parent2child.set(parent, []);
             } 
-            parent2child[parentSelector].push(focusableElement);
+            parent2child.get(parent).push(focusableElement);
         }
 
-        for(const [parentSelector, children] of Object.entries(parent2child)) {
-            let parent = document.querySelector(parentSelector);
-            console.log('parents', parentSelector, parent);
+        for(const [parent, children] of parent2child.entries()) {
             let overlay = makeOverlay(parent);
             for(const child of children) {
                 let targetSizeBox = makeTargetSize(child, parent);
@@ -151,16 +148,9 @@
     }
 
     const makeOverlay = (element) => {
-        console.log(element);
         let overlay = document.createElement('div');
         overlay.classList.add(overlayClass);
-        try {
         element.appendChild(overlay);
-        } catch(e) {
-            console.log('elle', element);
-            console.log('overlay', overlay);
-            throw e;
-        }
         return overlay;
     }
 
