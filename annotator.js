@@ -3,28 +3,36 @@
     var annotater = {
         parent2child: new Map(),
         annotationParentClassName: 'annotator-container-tator',
+        targetSizeClass: 'annotator-target-size',
+        elementBoxClass: 'annotator-element-box',
         stylesheetId: 'annotator-stylesheet-tator',
-        exists: false,
 
-        init: () => {
+        init: function () {
             this.getSelectorHelper = this.getSelectorHelper.bind(this);
             this.getSelector = this.getSelector.bind(this);
             this.removeTaters = this.removeTaters.bind(this);
+            this.hasTaters = this.hasTaters.bind(this);
             this.setup = this.setup.bind(this);
             this.getClosestNonStaticPositionedElement = this.getClosestNonStaticPositionedElement.bind(this);
             this.annotateElements = this.annotateElements.bind(this);
             this.makeOverlay = this.makeOverlay.bind(this);
             this.positionAnnotation = this.positionAnnotation.bind(this);
+            this.isFocusable = this.isFocusable.bind(this);
+
+            delete this.init;
+
             return this;
         },
 
-        hasTaters: () => {
-            return this.exists;
+        hasTaters: function() {
+            let stylesheet = document.getElementById(this.stylesheetId);
+            let overlays = document.querySelectorAll(`.${this.annotationParentClassName}`);
+            return stylesheet || overlays.length;
         },
 
 
         /** from microlib */
-        getSelectorHelper: (element) => {
+        getSelectorHelper: function(element) {
             let selector = element.tagName;
             let selectorUniqueAttrs = ''; // id, class e.g. tagname#spots.dog
             let selectorAttrs = ''; // where css uses brackets e.g. tagname[data-dog-name="spots"]
@@ -42,7 +50,7 @@
          * Gets a CSS selector that uniquely selects this component
          * @param {HTMLElement} element 
          */
-        getSelector: (element) => {
+        getSelector: function(element) {
             let selector = this.getSelectorHelper(element);
             let currentElement = element;
             while (document.querySelectorAll(selector).length > 1 && currentElement !== document.body) {
@@ -60,27 +68,28 @@
             2. take a callback/function that returns an html element that annotates the content
             3. 
         */
-        removeTaters: () => {
+        removeTaters: function() {
             let stylesheet = document.getElementById(this.stylesheetId);
             let overlays = document.querySelectorAll(`.${this.annotationParentClassName}`);
             stylesheet.remove();
-            for (const overlay of overlays) {
+            for (let overlay of overlays) {
                 overlay.remove();
             }
-            exists = false;
         },
 
-        setup: () => {
+        setup: function() {
             // create stylesheet
             stylesheet = document.createElement('style');
-            stylesheet.id = id;
+            stylesheet.id = this.stylesheetId;
             document.head.appendChild(stylesheet);
             // create rules
             let targetSizeRule =
-                `.${targetSizeClass} {`
+                `.${this.targetSizeClass} {`
                 + ` position: absolute;`
-                + ` background: white;`
-                + ` border: 2px solid black;`
+                + ` background: transparent;`
+                + ` border: 2px solid white;`
+                + ` outline: 2px dotted black;`
+                + ` outline-offset: -2px;`
                 + ` width: 24px;`
                 + ` height: 24px;`
                 + ` top: 50%;`
@@ -88,14 +97,14 @@
                 + ` transform: translate(-50%, -50%);`
                 + `}`;
             let elementBoxRule =
-                `.${elementBoxClass} {`
+                `.${this.elementBoxClass} {`
                 + ` position: absolute;`
                 + " background: rgba(0,0,0,0.8)!important;"
                 + `}`;
             let overlayRule =
-                `.${overlayClass} {`
+                `.${this.annotationParentClassName} {`
                 + ' position: absolute;'
-                + ' z-index: 1000000;'
+                + ' z-index: 100;'
                 + ' top: 0;'
                 + ' bottom: 0;'
                 + ' left: 0;'
@@ -109,7 +118,7 @@
             return this.exists = true;
         },
 
-        getClosestNonStaticPositionedElement: (element) => {
+        getClosestNonStaticPositionedElement: function(element) {
             let position = 'static';
             while (position === 'static' && element !== document.documentElement) {
                 element = element.parentElement;
@@ -125,19 +134,19 @@
          * @param {Array<HTMLElement>} listOfElements list of elements to annotate
          * @param {Function} callback parameter 1 = the element to annotate, parameter 2 = the closest parent element with a non-static position, must return an HTMLElement
          */
-        annotateElements: (listOfElements, callback) => {
+        annotateElements: function(listOfElements, callback) {
 
             // Organize list of elements by closest parent element that has a non-static CSS position
             for (const element of listOfElements) {
                 let [parent, positionType] = this.getClosestNonStaticPositionedElement(element);
-                if (!parent2child.has(parent)) {
-                    parent2child.set(parent, []);
+                if (!this.parent2child.has(parent)) {
+                    this.parent2child.set(parent, []);
                 }
-                parent2child.get(parent).push(element);
+                this.parent2child.get(parent).push(element);
             }
 
             // create the overlay and annotations
-            for (const [parent, children] of parent2child.entries()) {
+            for (const [parent, children] of this.parent2child.entries()) {
                 // create an overlay layer for the parent element
                 let overlay = this.makeOverlay(parent);
                 for (const child of children) {
@@ -145,18 +154,19 @@
                     let annotation = callback(child, parent);
                     this.positionAnnotation(annotation, child, parent);
                     overlay.appendChild(annotation);
+                    if (child.tagName === 'SUMMARY') console.log('annotating summary (summary, overlay)', child, annotation);
                 }
             }
         },
 
-        makeOverlay: (element) => {
+        makeOverlay: function(element) {
             let overlay = document.createElement('div');
             overlay.classList.add(this.annotationParentClassName);
             element.appendChild(overlay);
             return overlay;
         },
 
-        positionAnnotation: (annotation, annotatedElement, annotatedElementParent) => {
+        positionAnnotation: function(annotation, annotatedElement, annotatedElementParent) {
             let elementRect = annotatedElement.getBoundingClientRect();
             let parentRect = annotatedElementParent.getBoundingClientRect();
             // set element box location
@@ -170,11 +180,39 @@
                 console.log(this.getSelector(annotatedElement));
                 console.log(annotatedElement);
             });
+        },
+
+        isFocusable: function (element, log = false) {
+            // is not inert or contained within an inert element
+            // tabindex = 0
+            // is not contained within a closed details
+            let isTabbable = element.tabIndex === 0;
+            let isInert = element.hasAttribute('inert');
+            let isInInert = element.closest('[inert]');
+            let detailsStart = element;
+            if (element.tagName === 'SUMMARY') {
+                let parentDetails = element.closest('details')?.parentElement;
+                if (!parentDetails) {
+                    console.warn('malformed html, no <details> parent for <summary> element:', element);
+                    return false;
+                }
+                detailsStart = parentDetails;
+                // closest closed details
+                
+            }
+            let closestClosedAncestorDetails = detailsStart.closest('details:not([open])');
+            if (log) console.log(`isTabbable ${isTabbable} !isInert ${!isInInert} !isInInert ${!isInInert} isInOpenDetails ${!closestClosedAncestorDetails}`);
+            return isTabbable && !isInert && !isInInert && !closestClosedAncestorDetails;
+        },
+
+        addStyleRule: function(rule) {
+            let stylesheet = document.getElementById(this.stylesheetId);
         }
-    }
+    }.init();
 
     /* main should only call the library, should usually be specific to the bookmarklet */
     const main = () => {
+        console.log('has taters', annotater.hasTaters());
         if (annotater.hasTaters()) {
             annotater.removeTaters();
             return;
@@ -183,30 +221,36 @@
         annotater.setup();
         /* specific to checkTargetSize */
         let focusableElementNames = [
-            `a[href]:not([tabindex='-1'])`,
-            `area[href]:not([tabindex='-1'])`,
-            `input:not([disabled]):not([tabindex='-1'])`,
-            `select:not([disabled]):not([tabindex='-1'])`,
-            `textarea:not([disabled]):not([tabindex='-1'])`,
-            `button:not([disabled]):not([tabindex='-1'])`,
-            /*`iframe:not([tabindex='-1'])`, //removing iframe as they are often large an annoying*/
-            `[tabindex]:not([tabindex='-1'])`,
-            `[contentEditable=true]:not([tabindex='-1'])`
+            `a[href]:not([tabindex='-1'], [inert])`,
+            `area[href]:not([tabindex='-1'], [inert])`,
+            `summary:not([tabindex='-1'], [inert])`,
+            `input:not([disabled]):not([tabindex='-1'], [inert])`,
+            `select:not([disabled]):not([tabindex='-1'], [inert])`,
+            `textarea:not([disabled]):not([tabindex='-1'], [inert])`,
+            `button:not([disabled]):not([tabindex='-1'], [inert])`,
+            `[tabindex]:not([tabindex='-1'], [inert])`,
+            `[contentEditable=true]:not([tabindex='-1'], [inert])`
         ];
         let focusableElements = document.querySelectorAll(
             focusableElementNames.reduce((prev, cur) => `${prev}, ${cur}`, '[dummy-text-ignore-please]')
         );
+        focusableElements = [...focusableElements].reduce((prev, cur) => {
+            let isFocusable = annotater.isFocusable(cur);
+            if (isFocusable) prev.push(cur);
+            if (cur.tagName === 'SUMMARY') console.log('found summary: ', cur, isFocusable);
+            return prev;
+        }, []);
         /* the elements in focusableElements passed each, individually, to makeTargetSize() */
         annotater.annotateElements(focusableElements, makeTargetSize);
     }
 
+    
+
     const makeTargetSize = (element, parentElement) => {
-        const elementBoxClass = 'element-box-thingy';
-        const targetSizeClass = 'target-size-box-thingy';
         let elementBox = document.createElement('div');
         let targetSize = document.createElement('div');
-        elementBox.classList.add(elementBoxClass);
-        targetSize.classList.add(targetSizeClass);
+        elementBox.classList.add(annotater.elementBoxClass);
+        targetSize.classList.add(annotater.targetSizeClass);
         elementBox.appendChild(targetSize);
 
         return elementBox;
