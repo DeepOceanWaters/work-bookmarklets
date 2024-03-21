@@ -23,6 +23,8 @@
             this.makeOverlay = this.makeOverlay.bind(this);
             this.positionAnnotation = this.positionAnnotation.bind(this);
             this.isFocusable = this.isFocusable.bind(this);
+            this.findShadowRoots = this.findShadowRoots.bind(this);
+            this._findShadowRoots = this._findShadowRoots.bind(this);
 
             delete this.init;
 
@@ -131,9 +133,16 @@
 
         getClosestNonStaticPositionedElement: function (element) {
             let position = 'static';
+            // NOTE: per shadow root: if an element is in a shadowroot, must replace when element === null with element that is the shadowroot
             while (position === 'static' && element !== document.documentElement) {
                 element = element.parentElement;
-                let style = window.getComputedStyle(element);
+                let style;
+                try {
+                    style = window.getComputedStyle(element);
+                } catch(e) {
+                    console.log('tried on this ele: ', element);
+                    throw e;
+                }
                 position = style.getPropertyValue('position');
             }
             // should we return null, or just return the html element?
@@ -146,9 +155,10 @@
          * @param {Function} callback parameter 1 = the element to annotate, parameter 2 = the closest parent element with a non-static position, must return an HTMLElement
          */
         annotateElements: function (listOfElements, callback) {
-
+            console.log("list of eles: ", listOfElements);
             // Organize list of elements by closest parent element that has a non-static CSS position
             for (const element of listOfElements) {
+                console.log('')
                 let [parent, positionType] = this.getClosestNonStaticPositionedElement(element);
                 if (!this.parent2child.has(parent)) {
                     this.parent2child.set(parent, { position: positionType, children: [] });
@@ -240,10 +250,33 @@
             return isTabbable && !isInInert && !closestClosedAncestorDetails;
         },
 
-        addStyleRule: function (rule) {
-            let stylesheet = document.getElementById(this.stylesheetId);
+        findShadowRoots: function (element = document.documentElement) {
+            let shadowRootElements = [];
+            this._findShadowRoots(element, shadowRootElements);
+            return shadowRootElements;
+        },
+    
+        _findShadowRoots: function (element, outputArray) {
+            for (const child of element.children) {
+                if (child.shadowRoot) {
+                    outputArray.push(child.shadowRoot);
+                }
+                this._findShadowRoots(child, outputArray);
+            }
         }
     }.init();
+
+    const findFocusableElements = (domain, cssSelectors) => {
+        let focusableElements = domain.querySelectorAll(
+            cssSelectors.reduce((prev, cur) => `${prev}, ${cur}`, '[dummy-text-ignore-please]')
+        );
+        focusableElements = [...focusableElements].reduce((prev, cur) => {
+            let isFocusable = annotater.isFocusable(cur);
+            if (isFocusable) prev.push(cur);
+            return prev;
+        }, []);
+        return focusableElements;
+    }
 
     /* main should only call the library, should usually be specific to the bookmarklet */
     const main = () => {
@@ -266,19 +299,16 @@
             `[tabindex]:not([tabindex='-1'], [inert])`,
             `[contentEditable=true]:not([tabindex='-1'], [inert])`
         ];
-        let focusableElements = document.querySelectorAll(
-            focusableElementNames.reduce((prev, cur) => `${prev}, ${cur}`, '[dummy-text-ignore-please]')
-        );
-        focusableElements = [...focusableElements].reduce((prev, cur) => {
-            let isFocusable = annotater.isFocusable(cur);
-            if (isFocusable) prev.push(cur);
-            return prev;
-        }, []);
+        let shadowRoots = annotater.findShadowRoots();
+        let focusableElements = [];
+        for(const domain of shadowRoots) {
+            focusableElements.push(...findFocusableElements(domain, focusableElementNames));
+        }
+        console.log(focusableElements);
+        
         /* the elements in focusableElements passed each, individually, to makeTargetSize() */
         annotater.annotateElements(focusableElements, makeTargetSize);
     }
-
-
 
     const makeTargetSize = (element, parentElement) => {
         let elementBox = document.createElement('div');
