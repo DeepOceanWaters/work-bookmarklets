@@ -8,7 +8,6 @@ const colorContraster = () => {
     let target = document.getElementById('target');
     let sc = document.getElementById('success_criteria');
 
-    let sc_text = sc.options[sc.selectedIndex].text;
     let text = issueDesc.value;
 
     let rgbaEx = new RegExp(/rgba\(((\d+(\.\d+)?)(, ?)?){4}\)/);
@@ -33,17 +32,20 @@ const colorContraster = () => {
     }
     ratio = formatRatio(ratio);
 
-    let sc_chosen = sc_text.match(/\d+.\d+.\d+/)[0];
+    let chosenSuccessCriteriaNumbers = [...sc.selectedOptions].map(op => op.textContent.match(/\d+.\d+.\d+/)[0]);
 
     let isGraphic = !!issueDesc.value.match(/~~graphic/gi);
     let isFocus = !!issueDesc.value.match(/~~focus/gi);
     let issueDescValue = '';
     let type;
-    if (sc_chosen === '1.4.3') {
+    if (chosenSuccessCriteriaNumbers.includes('1.4.3')) {
         type = 'Text';
     }
-    else if (sc_chosen === '1.4.11') {
+    else if (chosenSuccessCriteriaNumbers.includes('1.4.11')) {
         type = 'Non-text'
+    }
+    else if  (chosenSuccessCriteriaNumbers.includes('1.4.1')) {
+        type = 'color';
     }
 
     if (!isGraphic) {
@@ -53,6 +55,12 @@ const colorContraster = () => {
     if (isGraphic && isFocus) {
         issueDescValue = `Focus indicator has an insufficient color contrast against a background image.\n\n`;
         issueDescValue += 'Representative Sample:\n';
+    }
+    else if (chosenSuccessCriteriaNumbers.includes('1.4.1') && isFocus) {
+        issueDescValue = `The component's focus indicator does not change form. As such it relies on a change in color to indicate focus, and this change in color has an insufficient color contrast ratio when compared to the unfocused state.\n\n`;
+    }
+    else if (chosenSuccessCriteriaNumbers.includes('1.4.1')) {
+        issueDescValue = `The difference between these two states does not change form, and these colors have an insufficient color contrast ratio when compared to each other. As such they rely solely on a change in color to indicate the difference.\n\n`;
     }
     else if (isGraphic) {
         issueDescValue = `${type} content has an insufficient color contrast against a background image.\n\n`;
@@ -66,20 +74,31 @@ const colorContraster = () => {
     let backgroundName = 'Background';
     if (isFocus) {
         forgroundName = 'Focus Indicator (foreground)';
+        if (type === 'color') {
+            backgroundName = 'Unfocused Color';
+        }
     }
     if (isGraphic) {
         backgroundName = 'Sampled Image (background)';
     }
+    
     issueDescValue += `Insufficient color contrast ratio of ${ratio}\n${forgroundName}: ${fore}\n${backgroundName}: ${back}`;
     issueDesc.value = issueDescValue;
 
-    let recommendation;
-    if (sc_chosen === '1.4.3') {
+    let recommendation = '';
+    if (chosenSuccessCriteriaNumbers.includes('1.4.3')) {
         recommendation = 'Ensure that the contrast ratio meets the ratio 4.5:1 for normal text, and 3:1 for large-scale text.';
 
     }
-    else if (sc_chosen === '1.4.11') {
+    else if (chosenSuccessCriteriaNumbers.includes('1.4.11')) {
         recommendation = 'Ensure that the contrast ratio meets the ratio 3:1 for interactable components or parts of graphical objects required to understand the content.';
+    }
+    else if (chosenSuccessCriteriaNumbers.includes('1.4.1')) {
+        recommendation = 
+        'Ensure that color is not the only means of distinguishing visual elements. '
+        + 'Color is not considered the only means of distinguishing visual elements if:\n'
+        + '- there is a change in form (text underline, outline, increased border size)\n'
+        + '- or if the color contrast between the two visual elements or states is 3:1 or higher';
     }
     else {
         alert('non applicable success criteria, cannot create recommendation');
@@ -91,6 +110,11 @@ const colorContraster = () => {
         if (isGraphic) {
             recommendation += '\n\n';
             recommendation += 'To ensure that the focus indicator has good color contrast against an image, we recommend either using a two-tone focus indicator, or ensuring that the focus indicator is placed against a solid background color.';
+        }
+        if (chosenSuccessCriteriaNumbers.includes('1.4.1')) {
+            recommendation += 
+                '\n\n'
+                + 'Note that 1.4.3 Color (Minimum) and 1.4.11 Non-text Contrast both still apply. As such it can be difficult to find a color that has a 3:1 color contrast when compared another visual element/state while still adhering to these success criteria, and why we recommend incorporating a change in form to accompany the change in color.';
         }
     }
     else if (isGraphic) {
