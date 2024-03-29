@@ -1,8 +1,31 @@
+let isTraversingLabelledbyOrDescribedby = false;
+
 const computeAccessibleName = (element) => {
     let rootNode = element;
     let currentNode = rootNode;
     let totalAccumulatedText = '';
+    let rootNodeRole = getRole(rootNode);
+    if (!roleAllowsNaming(rootNodeRole)) return totalAccumulatedText;
+    // 2. computation
+    //   a. hidden not referenced
+    if (isHiddenNotReferenced(currentNode)) {
+        return totalAccumulatedText;
+    }
+}
 
+const isHiddenNotReferenced = (node) => {
+    return isHidden(currentNode) 
+           && !isTraversingLabelledbyOrDescribedby
+           && 
+}
+
+/**
+ * 
+ * @param {HTMLElement} element 
+ * @returns Boolean
+ */
+const isHidden = (element) => {
+    throw new Error('Not yet implemented');
 }
 
 const ROLES = {
@@ -43,6 +66,7 @@ const ROLES = {
 }
 
 const getRole = (element) => {
+    throw new Error('not yet implemented');
     if (element.hasAttribute('role')) return element.getAttribute('role');
 
     let role;

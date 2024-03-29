@@ -46,7 +46,7 @@ var annotater = {
         return `${this.taterId}-${this.elementBoxClass}`;
     },
 
-    getAnnotationParentClassName: function() {
+    getAnnotationParentClassName: function () {
         return `${this.taterId}-${this.annotationParentClassName}`;
     },
 
@@ -297,7 +297,7 @@ const main = () => {
         annotater.removeTaters();
         return;
     }
-    
+
     loadAnnoations();
 }
 
@@ -324,19 +324,44 @@ const makeTargetSize = (img, parentElement) => {
     return elementBox;
 }
 
-const getNameFromAriaLabelledby = (element) => {
-    let name = '';
+/**
+ * must update
+ * @param {HTMLElement} element 
+ * @returns labelledby acc name
+ */
+const getNameFromAriaLabelledby = (element, visitedElements = []) => {
+    let names = [];
     let ids = element.getAttribute('aria-labelledby').split(' ');
-    for(const id of ids) {
+    const findName = (id) => {
+        let name;
         let el = document.getElementById(id);
-        if (el === element) {
-            element.
+        console.log(id, el)
+        if (el === element && !!el.getAttribute('aria-label')) {
+            console.log('setting name to aria-label');
+            name = el.getAttribute('aria-label');
         }
-        else if (el.hasAttribute('aria-labelledby')) {
-            getNameFromAriaLabelledby()
+        else if (el.hasAttribute('aria-labelledby') && !visitedElements.includes(el)) {
+            console.log('ve', visitedElements);
+            visitedElements.push(element);
+            name = getNameFromAriaLabelledby(el, visitedElements);
+        }
+        else {
+            console.log('setting name to text content');
+            name = el.textContent;
+        }
+        if (name) names.push(name);
+    }
+    console.log('ids', ids);
+    if (visitedElements.includes(element)) {
+        findName(element.id);
+    }
+    else {
+        for (const id of ids) {
+            findName(id);
         }
     }
-    return 
+    console.log('names', names);
+    return names.join(' ');
 }
 
 const getAltText = (img) => {
@@ -346,10 +371,10 @@ const getAltText = (img) => {
     }
     else if (img.tagName === 'IMG') {
         if (img.hasAttribute('aria-labelledby')) {
-            let name = getNameFromAriaLabelledby(img)
+            altText = getNameFromAriaLabelledby(img)
         }
-        else if (img.hasAttribute('aria-label')) {
-
+        else if (img.getAttribute('aria-label')) {
+            altText = img.getAttribute('aria-label');
         }
         else if (img.alt === '') {
             altText = '[HIDDEN - empty alt]';
@@ -359,8 +384,14 @@ const getAltText = (img) => {
         }
     }
     else if (img.getAttribute('role') === 'img') {
-
+        if (img.hasAttribute('aria-labelledby')) {
+            altText = getNameFromAriaLabelledby(img)
+        }
+        else if (img.getAttribute('aria-label')) {
+            altText = img.getAttribute('aria-label');
+        }
     }
+    return altText;
 }
 /*
 const exposeAltText = (element = document) => {
