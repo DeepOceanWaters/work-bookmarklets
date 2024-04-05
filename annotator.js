@@ -4,7 +4,15 @@ var annotater = {
     annotationParentClassName: 'annotator-container-tator',
     targetSizeClass: 'annotator-target-size',
     elementBoxClass: 'annotator-element-box',
+    taterLabelClassName: 'annotator-label',
     stylesheetId: 'annotator-stylesheet-tator',
+
+    POSITIONS: {
+        TOP: 'TOP',
+        BOTTOM: 'BOTTOM',
+        LEFT: 'LEFT', 
+        RIGHT: 'RIGHT'
+    },
 
     init: function () {
         this.getSelectorHelper = this.getSelectorHelper.bind(this);
@@ -22,6 +30,7 @@ var annotater = {
         this.getStylesheetName = this.getStylesheetName.bind(this);
         this.getTargetSizeClassName = this.getTargetSizeClassName.bind(this);
         this.getElementBoxClassName = this.getElementBoxClassName.bind(this);
+        this.getTaterLabelClassName = this.getTaterLabelClassName.bind(this);
         this.setTaterId = this.setTaterId.bind(this);
 
         delete this.init;
@@ -47,6 +56,10 @@ var annotater = {
 
     getAnnotationParentClassName: function() {
         return `${this.taterId}-${this.annotationParentClassName}`;
+    },
+
+    getTaterLabelClassName: function () {
+        return `${this.taterId}-${this.taterLabelClassName}`;
     },
 
     hasTaters: function () {
@@ -142,6 +155,12 @@ var annotater = {
             `.${this.getAnnotationParentClassName()} * {`
             + ' pointer-events: all;'
             + '}';
+        let overlayLabelRule = 
+            `.${this.getTaterLabelClassName()} {`
+            + ` position: absolute;`
+            + ` top: 0;`
+            + ` transform: translate(0, -100%)`
+            + `}`;
         document.documentElement.style.position = 'relative!important';
         // add rules
         stylesheet.sheet.insertRule(targetSizeRule);
@@ -174,8 +193,10 @@ var annotater = {
      * @param {Array<HTMLElement>} listOfElements list of elements to annotate
      * @param {Function} annotationCallback parameter 1 = the element to annotate, parameter 2 = the closest parent element with a non-static position, must return an HTMLElement
      * @param {Function} onClickCallback (event object, annotationElement, anotatedElement, parent of anotatedElement) called on click
+     * @param {String} annotationLabel text that labels the annotation
+     * @param {annotater.POSITIONS} annotationPosition the position of the label Defaults to top
      */
-    annotateElements: function (listOfElements, annotationCallback, onClickCallback) {
+    annotateElements: function (listOfElements, annotationCallback, onClickCallback, annotationLabel, labelPosition = this.POSITIONS.TOP) {
         //console.log("list of eles: ", listOfElements);
         // Organize list of elements by closest parent element that has a non-static CSS position
         for (const element of listOfElements) {
@@ -194,6 +215,7 @@ var annotater = {
             for (const child of parentProperties.children) {
                 // make annotation
 
+                let tater = makeTater(child, parent);
                 let annotation = annotationCallback(child, parent);
                 this.positionAnnotation(annotation, child, parent, parentProperties.position);
                 annotation.addEventListener('click', (e) => {
@@ -212,6 +234,10 @@ var annotater = {
         overlay.classList.add(this.getAnnotationParentClassName());
         element.appendChild(overlay);
         return overlay;
+    },
+
+    makeTater: function (child, parent) {
+        
     },
 
     positionAnnotation: function (annotation, annotatedElement, annotatedElementParent, annotatedElementParentPosition) {

@@ -15,8 +15,7 @@ const computeAccessibleName = (element) => {
 
 const isHiddenNotReferenced = (node) => {
     return isHidden(currentNode) 
-           && !isTraversingLabelledbyOrDescribedby
-           && 
+           && !isTraversingLabelledbyOrDescribedby;
 }
 
 /**
