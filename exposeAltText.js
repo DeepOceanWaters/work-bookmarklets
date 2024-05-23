@@ -95,7 +95,7 @@ var annotater = {
         3. 
     */
     removeTaters: function () {
-        console.log('removing taters');
+        //console.log('removing taters');
         let stylesheet = document.getElementById(this.getStylesheetName());
         let overlays = document.querySelectorAll(`.${this.getAnnotationParentClassName()}`);
         stylesheet.remove();
@@ -115,19 +115,17 @@ var annotater = {
             `.${this.getTargetSizeClassName()} {`
             + ` position: absolute;`
             + ` background: transparent;`
-            + ` border: 2px solid white;`
-            + ` outline: 2px dotted black;`
-            + ` outline-offset: -2px;`
-            + ` width: 24px;`
-            + ` height: 24px;`
-            + ` top: 50%;`
-            + ` left: 50%;`
-            + ` transform: translate(-50%, -50%);`
+            + ` top: 0;`
+            + ` bottom: 0;`
+            + ` left: 0;`
+            + ` right: 0;`
+            + ` text-align: center;`
             + `}`;
         let elementBoxRule =
             `.${this.getElementBoxClassName()} {`
             + ` position: absolute;`
-            + " background: rgba(0,0,0,0.8)!important;"
+            + ` background: rgba(0,0,0,0.8)!important;`
+            + ` color: white;`
             + `}`;
         let overlayRule =
             `.${this.getAnnotationParentClassName()} {`
@@ -198,8 +196,6 @@ var annotater = {
                 let annotation = annotationCallback(child, parent);
                 this.positionAnnotation(annotation, child, parent, parentProperties.position);
                 annotation.addEventListener('click', (e) => {
-                    console.log(this.getSelector(child));
-                    console.log(child);
                     if (e.getModifierState('Control')) child.click();
                     setTimeout(() => onClickCallback(e, annotation, child, parent), 5);
                 });
@@ -297,28 +293,38 @@ const main = () => {
         annotater.removeTaters();
         return;
     }
-
+    console.log(getListOfElements());
     loadAnnoations();
 }
 
+const getListOfElements = () => {
+    let elements = [...document.querySelectorAll('img')];
+    elements.push(...document.querySelectorAll('[role="img"]'));
+    return elements;
+}
+
 const reloadAnnotations = (e) => {
-    console.log('reloading annotations');
     annotater.removeTaters();
     loadAnnoations();
 }
 
-const loadAnnoations = () => {
-    let imgs = [...document.querySelectorAll('img')];
-    imgs.push(...document.querySelectorAll('[role="img"]'));
+const onClickCallback = (e, annotation, img, parent) => {
+    console.log(`ALT TEXT: ${getAltText(img)}`);
+    reloadAnnotations();
+}
 
+const loadAnnoations = () => {
+    annotater.setup();
+    let imgs = getListOfElements();
+    annotater.annotateElements(imgs, makeTargetSize, onClickCallback);
 }
 
 const makeTargetSize = (img, parentElement) => {
     let elementBox = document.createElement('div');
     let altText = document.createElement('p');
     altText.textContent = getAltText(img);
-    elementBox.classList.add(annotater.elementBoxClass);
-    altText.classList.add(annotater.targetSizeClass);
+    elementBox.classList.add(annotater.getElementBoxClassName());
+    altText.classList.add(annotater.getTargetSizeClassName());
     elementBox.appendChild(altText);
 
     return elementBox;
@@ -364,6 +370,14 @@ const getNameFromAriaLabelledby = (element, visitedElements = []) => {
     return names.join(' ');
 }
 
+/**
+ * Gets the alt text for an img, non-exhaustive, does not handle
+ * complex names (e.g. simplified version of the acc name computation,
+ * does not handle aria-labelledby an element that has it's own complex
+ * aria-labelledby naming computation)
+ * @param {IMGElement} img 
+ * @returns 
+ */
 const getAltText = (img) => {
     let altText;
     if (img.getAttribute('aria-hidden') === 'true') {
@@ -393,6 +407,8 @@ const getAltText = (img) => {
     }
     return altText;
 }
+
+main();
 /*
 const exposeAltText = (element = document) => {
     const windowPropName = 'exposingImgs';
