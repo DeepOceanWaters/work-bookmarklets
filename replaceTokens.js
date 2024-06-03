@@ -94,6 +94,10 @@ const tokens = {
         value: "Ensure that the purpose of each link is unambiguous."
     },
 
+    purposere: {
+        value: "We recommend either:\n- Adding a visually hidden SPAN element with text content that provides context\n- Adding the attribute ARIA-DESCRIBEDBY with a value equal to the ID of an element that would provide context"
+    },
+
     focusindicator: {
         value: "We recommend using a solid outline with a width of at least 2px, that also contrasts well with its adjacent colors (at least a 3:1 color contrast ratio)."
     },
