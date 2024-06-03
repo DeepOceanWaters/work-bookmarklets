@@ -51,7 +51,15 @@ const tokens = {
     },
 
     focusmanage: {
-        value: "Ensure that when content in focus is removed, focus is managed and returned to a logical place."
+        value: "Ensure that when content in focus is removed, focus is managed and returned to a logical place.",
+
+        modal: {
+            value: "Ensure that when modal content is closed, focus is managed and returned to a logical place - typically focus is placed on the component that opened the modal.",
+
+            open: {
+                value: "Ensure that when modal content is opened, focus is placed within the modal content - typically this is the first focusable item in the modal content."
+            }
+        }
     },
 
     keyboard: {
@@ -62,36 +70,81 @@ const tokens = {
         value: "Note that this is a best practice, and not necessary for conformance."
     },
 
+    usability: {
+        value: "Note that this is a usability problem, and not necessary for conformance."
+    },
+
     extra: {
         value: "In addition, while the following is not necessary for conformance, we recommend "
     },
 
     info: {
-        value: "Ensure that structure and relationships and information conveyed through presentation can be programmatically determined or is available in text."
+        structure: {
+            value: "Ensure that structure conveyed through presentation can be programmatically determined or is available in text."
+        },
+        info: {
+            value: "Ensure that information conveyed through presentation can be programmatically determined or is available in text."
+        },
+        relationship: {
+            value: "Ensure that relationships conveyed through presentation can be programmatically determined or is available in text."
+        },
+        value: "Ensure that structure, relationships, and information conveyed through presentation can be programmatically determined or is available in text."
     },
 
     alt: {
-        value: "Ensure that non-text content has a text alternative that serves and equivalent purpose."
+        value: "Ensure that non-text content has a text alternative that serves and equivalent purpose.",
+        complex: {
+            value: ""
+        }
     },
 
     labelinname: {
         value: "Ensure that when text visually labels an interactive component, that component's accessible name includes that text word-for-word."
     },
 
-    focusvisible: {
-        value: "Ensure that content in focus has a visible focus indicator."
+    focusrestrict: {
+        value: "Ensure that "
     },
 
-    focusmodal: {
-        value: "Ensure that when modal content is opened/showed, focus is moved into this content and restricted within it."
+    focusvisible: {
+        value: "Ensure that content in focus has a visible focus indicator, and the focus indicator has at least a 3:1 color contrast ratio against adjacent colors.",
+        lose: {
+            value: "Ensure that activating a component does not cause the component to lose its focus indicator."
+        }
+    },
+
+    flyout: {
+        value: "Ensure that when modal content is opened/showed, focus is moved into this content and restricted within it.",
+
+        focusorder: {
+            value: "Ensure that flyouts either restrict focus within themselves, or that the flyout is collapsed when focus moves beyond the flyout."
+        }
     },
 
     focusorder: {
-        value: "Ensure that focus order preserves meaning and operability."
+        issues: {
+            multiplesame: {
+                value: "This component takes multiple tab stops as the interactive component is nested within a non-interactive element with tabindex=0",
+                recommendation: "Ensure that interactive components only take one tab stop."
+            }
+        },
+
+        value: "Ensure that focus order preserves meaning and operability.",
+
+        multiple: {
+            value: "Ensure that interactive components only take one tab stop."
+        },
+
+        inert: {
+            value: ""
+        }
     },
 
     purpose: {
-        value: "Ensure that the purpose of each link is unambiguous."
+        value: "Ensure that the purpose of each link is unambiguous.",
+        recommendation: {
+            value: ""
+        }
     },
 
     focusindicator: {
@@ -99,7 +152,7 @@ const tokens = {
     },
 
     namere: {
-        value: "We recommend either:\\n- Adding a visually hidden SPAN element with text content that describes the purpose of this component\\n- Adding the attribute ARIA-LABEL with a value that describes the purpose of this component\\n- Adding the attribute ARIA-LABELLEDBY with a value equal to the ID of an element that has text content that describes the purpose of this component"
+        value: "We recommend either:\n- Adding a visually hidden SPAN element with text content that describes the purpose of this component\n- Adding the attribute ARIA-LABEL with a value that describes the purpose of this component\n- Adding the attribute ARIA-LABELLEDBY with a value equal to the ID of an element that has text content that describes the purpose of this component"
     },
 
     headingre: {
@@ -107,7 +160,7 @@ const tokens = {
     },
 
     scrollableregion: {
-        value: "We recommend wrapping this content in an element with the following properties:\\n- ROLE=REGION\\n- TABINDEX=0\\n- ARIA-LABEL or ARIA-LABELLEDBY to provide an accessible name that describes the region"
+        value: "We recommend wrapping this content in an element with the following properties:\n- ROLE=REGION\n- TABINDEX=0\n- ARIA-LABEL or ARIA-LABELLEDBY to provide an accessible name that describes the region"
     },
 
     labelre: {
@@ -115,15 +168,15 @@ const tokens = {
     },
 
     focusrestrict: {
-        value: "Typically, modal content restricts focus using JavaScript, where: \\n- when moving focus forward while on the last element in the modal content, focus moves to the first focusable element in the modal content\\n- when moving focus backwards while on the first element in the modal content, focus moves to the last focusable element in the modal content"
+        value: "Typically, modal content restricts focus using JavaScript, where: \n- when moving focus forward while on the last element in the modal content, focus moves to the first focusable element in the modal content\n- when moving focus backwards while on the first element in the modal content, focus moves to the last focusable element in the modal content"
     },
 
     oninputre: {
-        value: "We recommend either:\\n- add a submit button and only update the content on submission\\n- OR add text before these controls that notes that they will automatically update the associated content when their value is set"
+        value: "We recommend either:\n- add a submit button and only update the content on submission\n- OR add text before these controls that notes that they will automatically update the associated content when their value is set"
     },
 
     statusfull: {
-        value: "We recommend adding a live region and updating this live region with the text of the status message.\\n\\nLive regions can be created by adding the ARIA-LIVE attribute with a value of either POLITE or ASSERTIVE to an element. The following ROLES have an implicit ARIA-LIVE attribute value:\\n- ROLE=STATUS (implicit ARIA-LIVE value of POLITE)\\n- ROLE=ALERT (implicit ARIA-LIVE value of ASSERTIVE)\\n\\nNote that users agents need time to register live regions before they can be used. As such, we recommend that all live regions are added to the DOM as soon as the page loads. If the live region is added dynamically, then a delay will need to be implemented before any change is made to that live region to ensure that it has been registered by all user agents and works as intended."
+        value: "We recommend adding a live region and updating this live region with the text of the status message.\n\nLive regions can be created by adding the ARIA-LIVE attribute with a value of either POLITE or ASSERTIVE to an element. The following ROLES have an implicit ARIA-LIVE attribute value:\n- ROLE=STATUS (implicit ARIA-LIVE value of POLITE)\n- ROLE=ALERT (implicit ARIA-LIVE value of ASSERTIVE)\n\nNote that users agents need time to register live regions before they can be used. As such, we recommend that all live regions are added to the DOM as soon as the page loads. If the live region is added dynamically, then a delay will need to be implemented before any change is made to that live region to ensure that it has been registered by all user agents and works as intended."
     },
 
     onhover: {
@@ -131,7 +184,7 @@ const tokens = {
     },
 
     onhoverre: {
-        value: "We recommend either:\\n- allow users to dismiss this content by pressing the Escape key\\n- AND/OR allow users to dismiss this content by pressing the Control key"
+        value: "We recommend either:\n- allow users to dismiss this content by pressing the Escape key\n- AND/OR allow users to dismiss this content by pressing the Control key"
     },
 
     focuscolor: {
@@ -139,7 +192,7 @@ const tokens = {
     },
 
     errors: {
-        value: "We recommend adding a list of errors at the top of the form where:\\n- each list item identifies the form field in error with a link to the form field, and notes the error\\n- focus is shifted onto the list of errors on form submission\\nIf this is a long form, we recommend (in addition to the above) adding inline errors to each form field in error and associating that error with the form field as an accessible description.",
+        value: "We recommend adding a list of errors at the top of the form where:\n- each list item identifies the form field in error with a link to the form field, and notes the error\n- focus is shifted onto the list of errors on form submission\nIf this is a long form, we recommend (in addition to the above) adding inline errors to each form field in error and associating that error with the form field as an accessible description.",
         resources: [
             "https://webaim.org/techniques/formvalidation/#form"
         ]
@@ -153,11 +206,11 @@ const tokens = {
     },
 
     grouping: {
-        value: "We recommend either:\\n- wrapping this content in a native HTML FIELDSET element, with a LEGEND element.\\n- adding the attribute ROLE=GROUP to an element wrapping this content\\nAdditionally, the GROUP will need an accessible name, which should be the same as the text that visually labels it."
+        value: "We recommend either:\n- wrapping this content in a native HTML FIELDSET element, with a LEGEND element.\n- adding the attribute ROLE=GROUP to an element wrapping this content\nAdditionally, the GROUP will need an accessible name, which should be the same as the text that visually labels it."
     },
 
     thirdparty: {
-        value: "Content that is powered by code from a 3rd party vendor (such as YouTube, Twitter, etc.) must have a disclaimer added before it. The disclaimer should point out what aspect of this content is beyond your control. It should also give direct contact information so that users who have trouble accessing this content can get help easily.\\n\\nDisclaimers should come before the content in question, and must conform to WCAG. We recommend displaying disclaimers as either plain text, or a toggletip. We have added a link in the Resources section that demonstrates a toggletip.",
+        value: "Content that is powered by code from a 3rd party vendor (such as YouTube, Twitter, etc.) must have a disclaimer added before it. The disclaimer should point out what aspect of this content is beyond your control. It should also give direct contact information so that users who have trouble accessing this content can get help easily.\n\nDisclaimers should come before the content in question, and must conform to WCAG. We recommend displaying disclaimers as either plain text, or a toggletip. We have added a link in the Resources section that demonstrates a toggletip.",
         resources: [
             "https://www.tpgi.com/simple-standalone-toggletip-widget-pattern/"
         ]
@@ -176,12 +229,19 @@ const tokens = {
 }
 
 const getRecommendation = (token) => {
-    if (!(token in tokens)) {
-        console.log(`token not found (${token})`);
+    let possibleTokens = token.split('.');
+    let tokenObj = tokens;
+    for(const aToken of possibleTokens) {
+        if (aToken === 'value') {
+            throw new Error('"value" is not an allowed token value.');
+        }
+        else if (!(aToken in tokenObj)) {
+            console.log(`token not found (${token})`);
+            return;
+        }
+        tokenObj = tokenObj[aToken];
     }
-    else {
-        return tokens[token].value;
-    }
+    return tokenObj.value;
 }
 
 const getTokenMatches = (text) => {
@@ -235,7 +295,11 @@ const listTokens = (withValue = false) => {
     let tokenList = [];
     let tokenNames = Object.keys(tokens).sort();
     for (let token of tokenNames) {
-        let text = `${token}`;
+        let tokenObj = tokens[token];
+        let tokenObjKeys = Object.keys(tokenObj);
+        tokenObjKeys.splice(tokenObjKeys.indexOf('value'), 1);
+        let options = tokenObjKeys.join(', ');
+        let text = `${token}[ ${options} ]`;
         if (withValue) text += `: ${tokens[token].value.substring(0, 25)}...`;
         tokenList.push(text);
     }
