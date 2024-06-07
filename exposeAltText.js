@@ -300,6 +300,20 @@ const main = () => {
 const getListOfElements = () => {
     let elements = [...document.querySelectorAll('img')];
     elements.push(...document.querySelectorAll('[role="img"]'));
+    elements.push(...document.querySelectorAll('svg'));
+
+    // taken from stack overflow, finds all DIVs using background: url()
+    let divs = document.querySelectorAll("div");
+
+    let urlRegex = /url\(\s*?['"]?\s*?(\S+?)\s*?["']?\s*?\)/;
+
+    var divsWithBackgroundImage = [...divs].filter((div) => {
+        let backgroundImage = getComputedStyle(div).getPropertyValue("background-image");
+
+        return (backgroundImage.match(urlRegex));
+    });
+    // end taken from stack overflow
+    elements.push(...divsWithBackgroundImage);
     return elements;
 }
 
@@ -383,14 +397,25 @@ const getAltText = (img) => {
     if (img.getAttribute('aria-hidden') === 'true') {
         altText = '[HIDDEN - aria-hidden=true]';
     }
-    else if (img.tagName === 'IMG') {
+    else if (img.tagName === 'IMG' || img.tagName.toUpperCase() === 'SVG') {
         if (img.hasAttribute('aria-labelledby')) {
             altText = getNameFromAriaLabelledby(img)
         }
         else if (img.getAttribute('aria-label')) {
             altText = img.getAttribute('aria-label');
         }
-        else if (img.alt === '') {
+        else if (img.tagName.toUpperCase() === 'SVG') {
+            if (svgHasNonEmptyTitle(img)) {
+                altText = img.querySelector('title').textContent;
+            }
+            else {
+                altText = '[HIDDEN - SVG with no TITLE]';
+            }
+        }
+        else if (!img.hasAttribute('alt')) {
+            altText = '[No ALT attribute, no known text alternative]';
+        }
+        else if (img.hasAttribute('alt') && img.alt === '') {
             altText = '[HIDDEN - empty alt]';
         }
         else {
@@ -405,63 +430,18 @@ const getAltText = (img) => {
             altText = img.getAttribute('aria-label');
         }
     }
+    else if (img.tagName === 'DIV') {
+        altText = img.textContent || 'DIV bg image - NO ALT INSIDE';
+    }
+    else {
+        altText = `unknown img type (tag = ${img.tagName})`;
+    }
     return altText;
 }
 
-main();
-/*
-const exposeAltText = (element = document) => {
-    const windowPropName = 'exposingImgs';
-    let imgs = [...element.querySelectorAll('img')];
-    imgs.push(...element.querySelectorAll('[role="img"]'));
-    let imgNoAlt = [];
-    let wonkersImgs = [];
-    for (const img of imgs) {
-        if (window.hasOwnProperty(windowPropName) && window[windowPropName]) {
-            img.parentElement.parentElement.replaceChild(img, img.parentElement);
-        }
-        else {
-            let altTextMsg;
-            if (img.hasAttribute('role')) {
-                if (img.role === 'img') {
-                    if (img.hasAttribute('aria-label')) {
-                        let label = img.getAttribute('aria-label')
-                        altTextMsg = `${img.tagName}[role="${img.role}"] aria-label="${label}"`;
-                    }
-                    else {
-                        altTextMsg = `UNEXPECTED: ${img.tagName}[role="${img.role}"] no aria-label`;
-                        imgNoAlt.push(img);
-                    }
-                }
-                else {
-                    altTextMsg = `UNEXPECTED: ${img.tagName}[role="${img.role}"]`
-                    wonkersImgs.push(img);
-                }
-            }
-            else if (img.hasAttribute('alt')) {
-                let alt = img.getAttribute('alt');
-                altTextMsg = alt ? `alt="${img.alt}"` : 'empty alt';
-            }
-            else if (img.hasAttribute('title')) {
-                altTextMsg = `title="${img.title}"`;
-            }
-            else {
-                altTextMsg = 'no alt attribute';
-                imgNoAlt.push(img);
-            }
-            altText.textContent = altTextMsg;
-            img.parentElement.replaceChild(wrapper, img);
-            wrapper.append(img, altText);
-        }
-    }
-    if (window.hasOwnProperty(windowPropName)) {
-        window[windowPropName] = !window[windowPropName];
-    }
-    else {
-        window[windowPropName] = true;
-    }
-    console.log('all imgs', imgs);
-    if (imgNoAlt.length > 0) console.log('imgs no alt:', imgNoAlt);
-    if (wonkersImgs.length > 0) console.log('wonkers imgs, have a bizarre role???', wonkersImgs);
+const svgHasNonEmptyTitle = (svg) => {
+    let title = svg.querySelector('title');
+    return !!(title?.textContent);
 }
-exposeAltText();*/
+
+main();
