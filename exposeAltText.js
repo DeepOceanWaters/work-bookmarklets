@@ -5,7 +5,15 @@ var annotater = {
     annotationParentClassName: 'annotator-container-tator',
     targetSizeClass: 'annotator-target-size',
     elementBoxClass: 'annotator-element-box',
+    taterLabelClassName: 'annotator-label',
     stylesheetId: 'annotator-stylesheet-tator',
+
+    POSITIONS: {
+        TOP: 'TOP',
+        BOTTOM: 'BOTTOM',
+        LEFT: 'LEFT',
+        RIGHT: 'RIGHT'
+    },
 
     init: function () {
         this.getSelectorHelper = this.getSelectorHelper.bind(this);
@@ -23,6 +31,9 @@ var annotater = {
         this.getStylesheetName = this.getStylesheetName.bind(this);
         this.getTargetSizeClassName = this.getTargetSizeClassName.bind(this);
         this.getElementBoxClassName = this.getElementBoxClassName.bind(this);
+        this.getTaterLabelClassName = this.getTaterLabelClassName.bind(this);
+        this.makeLabel = this.makeLabel.bind(this);
+        this.repositionAnnotation = this.repositionAnnotation.bind(this);
         this.setTaterId = this.setTaterId.bind(this);
 
         delete this.init;
@@ -48,6 +59,10 @@ var annotater = {
 
     getAnnotationParentClassName: function () {
         return `${this.taterId}-${this.annotationParentClassName}`;
+    },
+
+    getTaterLabelClassName: function () {
+        return `${this.taterId}-${this.taterLabelClassName}`;
     },
 
     hasTaters: function () {
@@ -95,7 +110,7 @@ var annotater = {
         3. 
     */
     removeTaters: function () {
-        //console.log('removing taters');
+        console.log('removing taters');
         let stylesheet = document.getElementById(this.getStylesheetName());
         let overlays = document.querySelectorAll(`.${this.getAnnotationParentClassName()}`);
         stylesheet.remove();
@@ -111,21 +126,12 @@ var annotater = {
         stylesheet.id = this.getStylesheetName();
         document.head.appendChild(stylesheet);
         // create rules
-        let targetSizeRule =
-            `.${this.getTargetSizeClassName()} {`
-            + ` position: absolute;`
-            + ` background: transparent;`
-            + ` top: 0;`
-            + ` bottom: 0;`
-            + ` left: 0;`
-            + ` right: 0;`
-            + ` text-align: center;`
-            + `}`;
+
         let elementBoxRule =
             `.${this.getElementBoxClassName()} {`
             + ` position: absolute;`
-            + ` background: rgba(0,0,0,0.8)!important;`
-            + ` color: white;`
+            + " background: rgba(0,0,0,0.1)!important;"
+            + " border: 3px solid black;"
             + `}`;
         let overlayRule =
             `.${this.getAnnotationParentClassName()} {`
@@ -141,12 +147,23 @@ var annotater = {
             `.${this.getAnnotationParentClassName()} * {`
             + ' pointer-events: all;'
             + '}';
+        let overlayLabelRule =
+            `.${this.getTaterLabelClassName()} {`
+            + ` position: absolute;`
+            + ` top: 0;`
+            + ` transform: translate(-3px, -100%);`
+            + ` margin: 0!important;`
+            + ` color: white;`
+            + ` background: rgba(0,0,0,0.8)!important;`
+            + ` padding: 0.1rem 0.5rem;`
+            + `}`;
         document.documentElement.style.position = 'relative!important';
         // add rules
-        stylesheet.sheet.insertRule(targetSizeRule);
+        // stylesheet.sheet.insertRule(targetSizeRule);
         stylesheet.sheet.insertRule(elementBoxRule);
         stylesheet.sheet.insertRule(overlayRule);
         stylesheet.sheet.insertRule(overlayDescendantsRule);
+        stylesheet.sheet.insertRule(overlayLabelRule);
         return this.exists = true;
     },
 
@@ -173,8 +190,10 @@ var annotater = {
      * @param {Array<HTMLElement>} listOfElements list of elements to annotate
      * @param {Function} annotationCallback parameter 1 = the element to annotate, parameter 2 = the closest parent element with a non-static position, must return an HTMLElement
      * @param {Function} onClickCallback (event object, annotationElement, anotatedElement, parent of anotatedElement) called on click
+     * @param {String} annotationLabel text that labels the annotation
+     * @param {annotater.POSITIONS} annotationPosition the position of the label Defaults to top
      */
-    annotateElements: function (listOfElements, annotationCallback, onClickCallback) {
+    annotateElements: function (listOfElements, annotationCallback, onClickCallback, annotationLabel, labelPosition = this.POSITIONS.TOP) {
         //console.log("list of eles: ", listOfElements);
         // Organize list of elements by closest parent element that has a non-static CSS position
         for (const element of listOfElements) {
@@ -193,15 +212,64 @@ var annotater = {
             for (const child of parentProperties.children) {
                 // make annotation
 
-                let annotation = annotationCallback(child, parent);
+                //let tater = makeTater(child, parent);
+                let [annotation, labelText] = annotationCallback(child, parent);
                 this.positionAnnotation(annotation, child, parent, parentProperties.position);
                 annotation.addEventListener('click', (e) => {
+                    console.log(this.getSelector(child));
+                    console.log(child);
                     if (e.getModifierState('Control')) child.click();
                     setTimeout(() => onClickCallback(e, annotation, child, parent), 5);
                 });
-                overlay.appendChild(annotation);
+                let label = this.makeLabel(labelText);
+                overlay.append(annotation, label);
+                this.repositionAnnotation(child, annotation, overlay);
             }
         }
+    },
+
+    repositionAnnotation: function (element, annotation, overlay) {
+        // reset the styling
+        annotation.style.removeProperty('white-space');
+        // get annotation dimensions
+        let annotationRect = annotation.getBoundingClientRect();
+        let elementRect = element.getBoundingClientRect();
+        
+        // set the width of subannotations equal to parent
+        if (annotationRect.width < elementRect.width) {
+            let width = elementRect.width;
+            if (width < 50) width = 50;
+            annotation.style.width = width + 'px';
+            annotation.style.whiteSpace = 'normal';
+        }
+        // we may have changed to size, so we want to updated the rect
+        // so that we can ensure that it is fully within the viewport
+        // and does not cause horizontal scrolling (this is important for
+        // 1.4.10 Reflow)
+        annotationRect = annotation.getBoundingClientRect();
+        // this assumes that the documentElement is the HTML element
+        // clientWidth will include everything but the vertical scrollbar
+        // when used on the html element
+        let vw = document.documentElement.clientWidth;
+        if (annotationRect.width > vw || annotationRect.x + annotationRect.width > vw) {
+            let widthOffset, leftOffset;
+            let twoPercentVW = (2 * (vw / 100));
+            widthOffset = vw - 2 * twoPercentVW;
+            leftOffset = twoPercentVW - elementRect.x;
+            annotation.style.width = widthOffset + 'px';
+            annotation.style.left = leftOffset + 'px';
+            // in the style sheet we've set the "white-space" CSS property
+            // to nowrap, but when the text is longer than the width of the
+            // viewport, we need to wrap the text
+            annotation.style.whiteSpace = 'normal';
+        }
+    },
+
+    makeLabel: function (text) {
+        let label = document.createElement('div');
+        label.textContent = text;
+        label.classList.add(this.getTaterLabelClassName());
+        return label;
     },
 
     makeOverlay: function (element) {
@@ -209,6 +277,10 @@ var annotater = {
         overlay.classList.add(this.getAnnotationParentClassName());
         element.appendChild(overlay);
         return overlay;
+    },
+
+    makeTater: function (child, parent) {
+
     },
 
     positionAnnotation: function (annotation, annotatedElement, annotatedElementParent, annotatedElementParentPosition) {
@@ -223,10 +295,10 @@ var annotater = {
 
         let top = elementRect.top - parentRect.top + scrollYOffest;
         let left = elementRect.left - parentRect.left + scrollXOffset;
-        annotation.style.top = top + 'px';
-        annotation.style.left = left + 'px';
-        annotation.style.width = elementRect.width + 'px';
-        annotation.style.height = elementRect.height + 'px';
+        annotation.style.top = top - (3 * 2) + 'px';
+        annotation.style.left = left - (3 * 2) + 'px';
+        annotation.style.width = elementRect.width + 3 * 4 + 'px';
+        annotation.style.height = elementRect.height + 3 * 4 + 'px';
     },
 
     getScrollOffest: function (element, boundingParent = document.documentElement) {
@@ -284,7 +356,6 @@ var annotater = {
         }
     }
 }.init();
-
 /* END ANNOTATER */
 
 const main = () => {
@@ -323,7 +394,7 @@ const reloadAnnotations = (e) => {
 }
 
 const onClickCallback = (e, annotation, img, parent) => {
-    console.log(`ALT TEXT: ${getAltText(img)}`);
+    console.log(`ALT TEXT: ${getAltText(img)}`, img);
     reloadAnnotations();
 }
 
@@ -338,10 +409,10 @@ const makeTargetSize = (img, parentElement) => {
     let altText = document.createElement('p');
     altText.textContent = getAltText(img);
     elementBox.classList.add(annotater.getElementBoxClassName());
-    altText.classList.add(annotater.getTargetSizeClassName());
+    altText.classList.add(annotater.getTaterLabelClassName());
     elementBox.appendChild(altText);
 
-    return elementBox;
+    return [elementBox, getAltText(img)];
 }
 
 /**
@@ -445,3 +516,5 @@ const svgHasNonEmptyTitle = (svg) => {
 }
 
 main();
+
+

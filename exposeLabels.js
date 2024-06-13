@@ -1,3 +1,4 @@
+
 var annotater = {
     parent2child: new Map(),
     taterId: 'default',
@@ -45,7 +46,7 @@ var annotater = {
         return `${this.taterId}-${this.elementBoxClass}`;
     },
 
-    getAnnotationParentClassName: function() {
+    getAnnotationParentClassName: function () {
         return `${this.taterId}-${this.annotationParentClassName}`;
     },
 
@@ -94,7 +95,7 @@ var annotater = {
         3. 
     */
     removeTaters: function () {
-        console.log('removing taters');
+        //console.log('removing taters');
         let stylesheet = document.getElementById(this.getStylesheetName());
         let overlays = document.querySelectorAll(`.${this.getAnnotationParentClassName()}`);
         stylesheet.remove();
@@ -114,19 +115,17 @@ var annotater = {
             `.${this.getTargetSizeClassName()} {`
             + ` position: absolute;`
             + ` background: transparent;`
-            + ` border: 2px solid white;`
-            + ` outline: 2px dotted black;`
-            + ` outline-offset: -2px;`
-            + ` width: 24px;`
-            + ` height: 24px;`
-            + ` top: 50%;`
-            + ` left: 50%;`
-            + ` transform: translate(-50%, -50%);`
+            + ` top: 0;`
+            + ` bottom: 0;`
+            + ` left: 0;`
+            + ` right: 0;`
+            + ` text-align: center;`
             + `}`;
         let elementBoxRule =
             `.${this.getElementBoxClassName()} {`
             + ` position: absolute;`
-            + " background: rgba(0,0,0,0.8)!important;"
+            + ` background: rgba(0,0,0,0.8)!important;`
+            + ` color: white;`
             + `}`;
         let overlayRule =
             `.${this.getAnnotationParentClassName()} {`
@@ -197,8 +196,6 @@ var annotater = {
                 let annotation = annotationCallback(child, parent);
                 this.positionAnnotation(annotation, child, parent, parentProperties.position);
                 annotation.addEventListener('click', (e) => {
-                    console.log(this.getSelector(child));
-                    console.log(child);
                     if (e.getModifierState('Control')) child.click();
                     setTimeout(() => onClickCallback(e, annotation, child, parent), 5);
                 });
@@ -288,7 +285,6 @@ var annotater = {
     }
 }.init();
 
-
 const labelExposerClass = 'aria-label-exposer';
 
 const findWithinShadowroots = (domain, cssSelectors, logicFunc) => {
@@ -323,12 +319,20 @@ const loadAnnoations = () => {
     ];
     let shadowRoots = annotater.findShadowRoots();
     let elementsToAnnotate = [];
+    for(const selector of labelledbElementsSelector) {
+        elementsToAnnotate.push(...document.querySelectorAll(selector));
+    }
     for(const domain of shadowRoots) {
         elementsToAnnotate.push(...findWithinShadowroots(domain, labelledbElementsSelector, () => true));
     }
     
     /* the elements in focusableElements passed each, individually, to makeTargetSize() */
-    annotater.annotateElements(focusableElements, makeLabel, reloadAnnotations);
+    annotater.annotateElements(elementsToAnnotate, makeLabel, onClickCallback);
+}
+
+const onClickCallback = (e, annotation, element, parent) => {
+    console.log(`LABEL: ${getLabel(element)}`, element);
+    reloadAnnotations();
 }
 
 const reloadAnnotations = (e) => {
@@ -338,19 +342,42 @@ const reloadAnnotations = (e) => {
 
 const makeLabel = (element, parentElement) => {
     let elementBox = document.createElement('div');
-    let targetSize = document.createElement('div');
-    elementBox.classList.add(annotater.elementBoxClass);
-    targetSize.classList.add(annotater.targetSizeClass);
-    elementBox.appendChild(targetSize);
+    let altText = document.createElement('p');
+    altText.textContent = getLabel(element);
+    elementBox.classList.add(annotater.getElementBoxClassName());
+    altText.classList.add(annotater.getTargetSizeClassName());
+    elementBox.appendChild(altText);
 
     return elementBox;
+}
+
+const getLabel = (element) => {
+    let label = "";
+    let ariaLabelledby = element.getAttribute('aria-labelledby');
+    let ariaLabel = element.getAttribute('aria-label');
+    if (ariaLabelledby) {
+        let ids = ariaLabelledby.split(' ');
+        for(const id of ids) {
+            if (!id) continue;
+            let labellingElement = document.getElementById(id);
+            if (!labellingElement) label += `[${id} not found] `;
+            else label += getLabel(labellingElement);
+        }
+    }
+    else if (ariaLabel) {
+        label += ariaLabel;
+    }
+    else {
+        label += element.textContent;
+    }
+    return label;
 }
 
 main();
 
 
 /*** */
-
+/*
 const exposeAriaLabel = (context = document) => {
     const windowProp = 'exposedAriaLabelElements';
     let elementsWithAriaLabel = context.querySelectorAll('[aria-label]');
@@ -388,4 +415,4 @@ if (stylesheet) {
     stylesheet.sheet.insertRule(rule)
 }
 
-console.log(exposeAriaLabel());
+console.log(exposeAriaLabel());*/

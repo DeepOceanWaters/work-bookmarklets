@@ -16,9 +16,15 @@ const example = {
         aliases: {
             bp: "bestpractice",
             re: "recommendation",
+            req: "requirement",
+            res: "resources",
             lin: "labelinname",
             i: 'issues',
-            u: 'usability'
+            u: 'usability',
+            deco: 'decorative',
+            comp: 'component',
+            hi: 'hierarchy',
+            msg: 'message'
         },
 
         keywords: (
@@ -85,6 +91,14 @@ const example = {
                         requirement: "Ensure that modal dialogs restrict focus within themselves.",
                         recommendation: "Typically, modal content restricts focus using JavaScript, where: \n- when moving focus forward while on the last element in the modal content, focus moves to the first focusable element in the modal content\n- when moving focus backwards while on the first element in the modal content, focus moves to the last focusable element in the modal content."
                     }
+                }
+            },
+            visible: {
+                issues: "This component does not have a visible focus indicator.",
+                requirement: "Ensure that content in focus has a visible focus indicator, and the focus indicator has at least a 3:1 color contrast ratio against adjacent colors.",
+                recommendation: "We recommend using a solid outline with a width of at least 2px, that also contrasts well with its adjacent colors (at least a 3:1 color contrast ratio).",
+                lose: {
+                    value: "Ensure that activating a component does not cause the component to lose its focus indicator."
                 }
             }
         },
@@ -153,6 +167,11 @@ const example = {
         },
 
         info: {
+            role: {
+                issues: "This text presents as and acts as a $var$, but is not programmatically determinable as such.",
+                recommendation: "We recommend converting this text into a $var$.",
+                requirement: "Ensure that structure/relationships conveyed by presentation can be programmatically determined."
+            },
             structure: {
                 value: "Ensure that structure conveyed through presentation can be programmatically determined or is available in text."
             },
@@ -246,18 +265,23 @@ const example = {
                 issues: "This non-text content has a text alternative, but it does not adequately describe the non-text content.",
                 requirement: "Ensure that non-text content has a text alternative that adequately describes the content in context. If the non-text content is decorative, it should be implemented in a way such that AT can ignore it.",
                 recommendation: ""
+            },
+            decorative: {
+                issues: "This non-text content has a text alternative, but it is decorative.",
+                requirement: "Ensure that decorative non-text content is implemented in a way such that AT can ignore it.",
+                recommendation: "For IMG elements, we recommend setting the ALT attribute to be empty.\nFor SVG elements we recommend adding ARIA-HIDDEN=TRUE."
             }
 
         },
 
-
-
-        purpose: {
-            value: "Ensure that the purpose of each link is unambiguous.",
-            recommendation: {
-                value: ""
-            }
+        link: {
+            purpose: {
+                issues: "The purpose of this link is ambiguous.",
+                requirement: "Ensure that the purpose of each link is unambiguous.",
+                recommendation: "We recommend adding the ARIA-DESCRIBEDBY attribute to provide context."
+            },
         },
+
 
         focusindicator: {
             value: "We recommend using a solid outline with a width of at least 2px, that also contrasts well with its adjacent colors (at least a 3:1 color contrast ratio)."
@@ -285,6 +309,12 @@ const example = {
                 issues: "This content is not visually presented as, and does not act as, a heading.",
                 requirement: "Ensure that only text that acts and is presented as a heading is programmatically determinable as such.",
                 recommendation: "We recommend replacing the HEADING element with a more appropriate element, such as a PARAGARAPH element. Alternatively, the attribute ROLE=NONE can be added to the HEADING element."
+            },
+            hierarchy: {
+                relatedsc: ['1.3.1'],
+                issues: "The visual/practical hierarchy of these headings does not match the programmatic hierarchy.",
+                requirement: "Ensure that the visual/practical hierarchy of headings is programmatically determinable.",
+                recommendation: "Heading levels (1-6) determine hierarchy. Heading levels can be skipped if necessary, but best practice is to ensure that heading levels aren't skipped - e.g. H2 is followed by an H3 if it is logical subsection of the H2 topic."
             }
         },
 
@@ -319,6 +349,12 @@ const example = {
                 relatedsc: ["4.1.3"],
                 issues: "This status message is not implemented in a way such that AT is notifying users of the message.",
                 requirement: "Ensure that status messages are implemented in a way such that AT can notify users of the message.",
+                recommendation: "We recommend adding a live region and updating this live region with the text of the status message.\n\nLive regions can be created by adding the ARIA-LIVE attribute with a value of either POLITE or ASSERTIVE to an element. The following ROLES have an implicit ARIA-LIVE attribute value:\n- ROLE=STATUS (implicit ARIA-LIVE value of POLITE)\n- ROLE=ALERT (implicit ARIA-LIVE value of ASSERTIVE)\n\nNote that users agents need time to register live regions before they can be used. As such, we recommend that all live regions are added to the DOM as soon as the page loads. If the live region is added dynamically, then a delay will need to be implemented before any change is made to that live region to ensure that it has been registered by all user agents and works as intended."
+            },
+            loading: {
+                relatedsc: ["4.1.3"],
+                issues: "Loading animations act as status messages but this one is not implemented in a way such that AT is notifying users of the message.",
+                requirement: "Ensure that status messages such as loading animations are implemented in a way such that AT can notify users of the message.",
                 recommendation: "We recommend adding a live region and updating this live region with the text of the status message.\n\nLive regions can be created by adding the ARIA-LIVE attribute with a value of either POLITE or ASSERTIVE to an element. The following ROLES have an implicit ARIA-LIVE attribute value:\n- ROLE=STATUS (implicit ARIA-LIVE value of POLITE)\n- ROLE=ALERT (implicit ARIA-LIVE value of ASSERTIVE)\n\nNote that users agents need time to register live regions before they can be used. As such, we recommend that all live regions are added to the DOM as soon as the page loads. If the live region is added dynamically, then a delay will need to be implemented before any change is made to that live region to ensure that it has been registered by all user agents and works as intended."
             }
         },
@@ -362,7 +398,31 @@ const example = {
         },
 
         grouping: {
+            issues: "This content is visually grouped, but this grouping",
             value: "We recommend either:\n- wrapping this content in a native HTML FIELDSET element, with a LEGEND element.\n- adding the attribute ROLE=GROUP to an element wrapping this content\nAdditionally, the GROUP will need an accessible name, which should be the same as the text that visually labels it."
+        },
+
+        form: {
+            group: {
+                relatedsc: ["1.3.1"],
+                issues: "These form fields are visually grouped, but this grouping is not programmatically determinable.",
+                requirement: "Ensure that when content is visually grouped, this grouping can be programmatically determined.",
+                recommendation: "We recommend either:\n- wrapping this content in a native HTML FIELDSET element, with a LEGEND element (provides an accessible name to the FIELDSET).\n- adding the attribute ROLE=GROUP to an element wrapping this content and providing it an accessible name.\n\nNote that GROUPs need an accessible name otherwise they are not exposed to users. For a FIELDSET element, the LEGEND element provides an accessible name. For ROLE=GROUP, ARIA-LABEL or ARIA-LABELLEDBY can be used."
+            },
+            errors: {
+                null: {
+                    issues: "While errors are detected, the form fields in error are not identified and the error described in text."
+                },
+                message: {
+                    relatedsc: ['3.3.1', '4.1.3'],
+                    issues: "While errors are detected and described in text, they are not implemented in a way such that AT can relay this message to users when it is populated.",
+                    requirement: "Ensure that AT can notify users of error messages.",
+                    recommendation: "We recommend adding a list of errors at the top of the form where:\n- each list item identifies the form field in error with a link to the form field, and notes the error\n- focus is shifted onto the list of errors on form submission\nWe also recommend (in addition to the above) adding inline errors to each form field in error and associating that error with the form field as an accessible description - this can be done by adding ARIA-DESCRIBEDBY to the form field.",
+                    resources: [
+                        "https://webaim.org/techniques/formvalidation/#form"
+                    ]
+                }
+            }
         },
 
         thirdparty: {
@@ -405,6 +465,17 @@ const example = {
                 outputValue += '\n\n';
                 outputValue += tokenObj["recommendation"];
                 break;
+            }
+            else if (aToken === 'resources') {
+                let listOfResources = tokenObj["resources"];
+                if (!listOfResources) {
+                    outputValue = `no resources found for ${token}`;
+                }
+                else {
+                    for(const resource of listOfResources) {
+                        outputValue += "\n" + resource; 
+                    }
+                }
             }
             else if (!(aToken in tokenObj)) {
                 console.log(`token not found (${token})`);
