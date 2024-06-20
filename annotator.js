@@ -184,6 +184,15 @@ var annotater = {
         return [element, position];
     },
 
+    getListOfNonStaticPositionedAncestors: function (element) {
+        let [ancestor, position] = [element, 'static'];
+        let ancestors = [];
+        while (([ancestor, position] = getClosestNonStaticPositionedElement(element))[0] !== document.documentElement) {
+            ancestors.push([ancestor, position]);
+        }
+        return ancestors;
+    },
+
     /**
      * Given a list of elements and a callback to create the annotation, annotates the webpage
      * @param {Array<HTMLElement>} listOfElements list of elements to annotate

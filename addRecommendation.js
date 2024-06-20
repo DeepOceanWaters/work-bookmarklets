@@ -63,6 +63,9 @@ const example = {
 
         focus: {
             value: "stuff",
+            hidden: {
+                
+            },
             href: {
                 issues: "This ANCHOR element is not focusable and does not have an appropriate role as it does not have an HREF attribute. Note that ANCHOR elements without an HREF attribute have a role of GENERIC and are not focusable.",
                 requirement: "Ensure that interactive anchor elements have an HREF attribute, or are given an appropriate role and can be operated using a keyboard.",
