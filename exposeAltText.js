@@ -410,7 +410,7 @@ const makeTargetSize = (img, parentElement) => {
     altText.textContent = getAltText(img);
     elementBox.classList.add(annotater.getElementBoxClassName());
     altText.classList.add(annotater.getTaterLabelClassName());
-    elementBox.appendChild(altText);
+    //elementBox.appendChild(altText);
 
     return [elementBox, getAltText(img)];
 }
@@ -518,3 +518,71 @@ const svgHasNonEmptyTitle = (svg) => {
 main();
 
 
+const findAllNonStaticElements = (element) => {
+    let nonStaticElements = [];
+    for(let child of element.children) {
+        let style = window.getComputedStyle(child);
+        if (style.getPropertyValue('position') !== 'static') {
+            nonStaticElements.push(child);
+        }
+        nonStaticElements.push(...findAllNonStaticElements(child));
+    }
+    return nonStaticElements;
+}
+// fdsafds
+const createLayers = (nonStaticlyPositionedElements, root) => {
+    let layers = [];
+    let processedElements = new Set();
+    for (let element of nonStaticlyPositionedElements) {
+        // create layer for current element
+        // trace current element's ancestors and see if any are contained within nonStaticly...
+        // if they are create a layer for them, and repeat step 1 for new layer
+        let layer = createOverlayItem(element);
+        layers.push(layer);
+        let ancestor = getClosestAncestorIfInArray(nonStaticlyPositionedElements, element);
+        if (ancestor) {
+
+        }
+        else {
+            root.appendChild(layer);
+        }
+    }
+    return layers;
+}
+
+const getClosestAncestorIfInArray = (arr, element) => {
+    while((element = element.parentElement) !== document.documentElement) {
+        if (arr.includes(element)) break;
+    }
+    return element;
+}
+
+const createBodyLayer = () => {
+    createLayers([document.body]);
+}
+
+const createOverlayItem = (element, position) => {
+    let overlay = document.createElement('div');
+    let elementRect = element.getBoundingClientRect();
+    overlay.style.top = elementRect.y + 'px';
+    overlay.style.left = elementRect.x + 'px';
+    overlay.style.width = elementRect.width + 'px';
+    overlay.style.height = elementRect.height + 'px';
+    overlay.style.position = position || window.getComputedStyle(element).getPropertyValue('position');
+    return overlay;
+}
+
+const getScrollOffest = (element, boundingParent = document.documentElement) => {
+    let scrollYOffest, scrollXOffset;
+
+    const getScroll = (el, scrollProperty) => {
+        while (el[scrollProperty] <= 0 && el !== boundingParent) {
+            el = el.parentElement;
+        }
+        return el[scrollProperty]
+    }
+
+    scrollYOffest = getScroll(element, "scrollTop");
+    scrollXOffset = getScroll(element, "scrollLeft");
+    return [scrollXOffset, scrollYOffest];
+}

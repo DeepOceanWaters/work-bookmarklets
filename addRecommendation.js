@@ -11,6 +11,20 @@ const example = {
     requirement: "",
     recommendation: ""
 }*/
+/*
+function addScrollEvent(root, callback, throttle) {
+    const addEvent = (element, callback, throttle) => {
+        let timeout;
+        element.addEventListener('scroll', (e) => {
+            if (timeout) return;
+            callback(element);
+            timeout = setTimeout(() => {timeout = undefined}, throttle);
+        });
+    }
+    addEvent(root, callback, throttle);
+    for(let child of root.children) addScrollEvent(child, callback, throttle);
+}*/
+    
 (() => {
     const tokens = {
         aliases: {
@@ -57,6 +71,22 @@ const example = {
             }
         },
 
+        textspacing: {
+            term: ""
+                + "{"
+                + " line-height: 1.5 !important;"
+                + " letter-spacing: 0.12em !important;"
+                + " word-spacing: 0.16em !important;"
+                + "}"
+                + ""
+                + "p{"
+                + " margin-bottom: 2em !important;"
+                + "}",
+            issues: "",
+            recommendation: "",
+            requirement: "",
+        },
+
         onfocus: {
             value: "Ensure that moving focus does not cause a change of context."
         },
@@ -64,7 +94,7 @@ const example = {
         focus: {
             value: "stuff",
             hidden: {
-                
+
             },
             href: {
                 issues: "This ANCHOR element is not focusable and does not have an appropriate role as it does not have an HREF attribute. Note that ANCHOR elements without an HREF attribute have a role of GENERIC and are not focusable.",
@@ -125,7 +155,8 @@ const example = {
                 issues: "This component does not have a label that describes its purpose/function.",
                 requirement: "Ensure that interactive components have a label/accessible name that describes their purpose/function.",
                 recommendation: ""
-            }
+            },
+            warning: "We recommend using either ARIA-LABELLEDBY or a visually hidden SPAN as opposed to ARIA-LABEL as automatic translation services typically do not update attributes such as ARIA-LABEL."
         },
 
         role: {
@@ -367,11 +398,11 @@ const example = {
         },
 
         onhover: {
-            value: "Ensure that when content appears on hover/focus, that content can be dismissed without moving the pointer or focus."
-        },
-
-        onhoverre: {
-            value: "We recommend either:\n- allow users to dismiss this content by pressing the Escape key\n- AND/OR allow users to dismiss this content by pressing the Control key"
+            dismiss: {
+                issues: "This content appears on hover/focus, but can't be dismissed without moving the pointer/focus.",
+                requirement: "Ensure that when content appears on hover/focus, that content can be dismissed without moving the pointer or focus.",
+                recommendation: "We recommend either:\n- allow users to dismiss this content by pressing the Escape key\n- AND/OR allow users to dismiss this content by pressing the Control key"
+            }
         },
 
         focuscolor: {
@@ -475,8 +506,8 @@ const example = {
                     outputValue = `no resources found for ${token}`;
                 }
                 else {
-                    for(const resource of listOfResources) {
-                        outputValue += "\n" + resource; 
+                    for (const resource of listOfResources) {
+                        outputValue += "\n" + resource;
                     }
                 }
             }
