@@ -9,6 +9,7 @@
     const comboboxId = 'bmk-pages-combobox';
     const containerId = 'bmk-pages-container';
     const comboboxWidgetId = 'bmk-pages-combobox-widget';
+    const pressedBtnClass = 'bmk-pressed-btn';
 
     let option2option = {};
 
@@ -21,16 +22,18 @@
         let options = [...pages.querySelectorAll('option')];
         let [label, pageSearch, optionsSearch] = makePagesCombobox(options);
         pageSearch.addEventListener('focusin', () => toggleListbox(pageSearch, true));
+        /*
         pageSearch.addEventListener('blur', (e) => {
             if (!optionsSearch.contains(e.relatedTarget)) toggleListbox(pageSearch, false)
-        });
+        });*/
         pageSearch.addEventListener('input', searchOptions);
         pageSearch.addEventListener('keydown', keyRouter);
         optionsSearch.addEventListener('keydown', optionKeyRouter);
         let container = makeHeaderBar();
         let closeBtn = makeCloseButton();
+        let showOnlySelectedOptionsBtn = makeShowOnlySelectedButton();
         let comboboxWidget = makeComboboxWidget(label, pageSearch, optionsSearch);
-        container.append(comboboxWidget, closeBtn);
+        container.append(comboboxWidget, showOnlySelectedOptionsBtn, closeBtn);
         document.documentElement.append(container);
         makeStyles();
     }
@@ -58,7 +61,12 @@
     function makeStyles() {
         styles = document.createElement('style');
         document.head.appendChild(styles);
-        let containerRule =
+        let rules = [
+            `#${containerId} *:focus {`
+            + ` outline-offset: 0.35rem;`
+            + ` outline-width: 0.25rem;`
+            + `}`,
+            
             `#${containerId} {`
             + ` position: absolute;`
             + ` width: 100vw;`
@@ -73,26 +81,26 @@
             + ` box-shadow: 0px 3px 8px -3px black;`
             + ` border-bottom: 1px solid black;`
             + ` top: 0;`
-            + `}`;
-        let comboboxWidgetRule =
+            + `}`,
+        
             `#${comboboxWidgetId} {`
             + ` position: relative;`
             + ` width: fit-content;`
-            + `}`;
-        let comboboxContainerBtnRule =
+            + `}`,
+
             `#${containerId} button {`
             + ` border: 1px solid black;`
             + ` box-shadow: 0px 3px 8px -3px black;`
             + ` display: flex;`
             + ` justify-content: center;`
             + ` padding: 0.5rem;`
-            + `}`;
-        let comboboxContainerBtnHoverRule =
+            + `}`,
+        
             `#${containerId} button:hover {`
             + ` box-shadow: 0px 4px 9px -3px black;`
-            + ` background-color: #EFEFEF;`
-            + `}`;
-        let listboxRule =
+            + ` background-color: #E1E1E1;`
+            + `}`,
+        
             `#${listboxId} {`
             + ` position: absolute;`
             + ` bottom: 0;`
@@ -102,44 +110,58 @@
             + ` background: white;`
             + ` overflow-y: scroll;`
             + ` border: 1px solid black;`
-            + `}`;
-        let listboxOptionRule =
+            + `}`,
+
             `#${listboxId} [role="option"] {`
             + ` border-bottom: 1px solid black;`
             + ` padding: 0.3rem;`
-            + `}`
-        let listboxOptionSelectedRule =
+            + ` cursor: pointer;`
+            + `}`,
+
+            `#${listboxId} [role="option"]:hover {`
+            + ` background-color: #E1E1E1;`
+            + `}`,
+
             `#${listboxId} [role="option"].selected {`
             + ` font-weight: bold;`
-            + ` border-bottom: 1px solid black;`
-            + ` padding: 0.3rem;`
-            + `}`
-        let listboxOptionRule2 = 
-            `#${listboxId} [role="option"]:nth-child(even):not(:focus) {`
+            + `}`,
+
+            `#${listboxId} [role="option"]:nth-child(even):not(:focus, :hover) {`
             + ` background-color: #EFEFEF;`
-            + `}`
-        let listboxOptionFocusRule = 
+            + `}`,
+
             `#${listboxId} [role="option"]:focus {`
             + ` outline: none;`
             + ` color: #EFEFEF;`
             + ` background-color: #333;`
-            + `}`
-        let comboboxRule =
+            + `}`,
+        
             `#${comboboxId} {`
             + ` border: 1px solid black;`
             + ` min-height: 2rem;`
             + ` margin-left: 0.5rem;`
-            + `}`;
-        styles.sheet.insertRule(containerRule);
-        styles.sheet.insertRule(comboboxWidgetRule);
-        styles.sheet.insertRule(comboboxContainerBtnRule);
-        styles.sheet.insertRule(comboboxContainerBtnHoverRule);
-        styles.sheet.insertRule(listboxRule);
-        styles.sheet.insertRule(listboxOptionRule);
-        styles.sheet.insertRule(listboxOptionRule2);
-        styles.sheet.insertRule(listboxOptionFocusRule);
-        styles.sheet.insertRule(listboxOptionSelectedRule);
-        styles.sheet.insertRule(comboboxRule);
+            + `}`,
+
+            `.${pressedBtnClass}::before {`
+            + ` content: '';`
+            + ` width: 1.5rem;`
+            + ` height: 1.5rem;`
+            + ` border: 3px solid black;`
+            + ` display: flex;`
+            + ` justify-content: center;`
+            + ` align-items: center;`
+            + ` margin-right: 0.5rem;`
+            + `}`,
+
+            `.${pressedBtnClass}[aria-pressed="true"]::before {`
+            + ` content: "✓" / "";`
+            + ` font-weight: bold;`
+            + `}`
+        ];
+
+        for (let rule of rules) {
+            styles.sheet.insertRule(rule);
+        }
     }
 
     function makeComboboxWidget(label, combobox, listbox) {
@@ -164,6 +186,31 @@
         return btn;
     }
 
+    function makeShowOnlySelectedButton() {
+        let btn = document.createElement('button');
+        btn.textContent = 'Show Only Selected Options';
+        btn.classList.add(pressedBtnClass);
+        btn.addEventListener('click', (e) => {
+            let pressed = !(btn.getAttribute('aria-pressed') === 'true');
+            btn.setAttribute('aria-pressed', pressed);
+            if (pressed) {
+                btn.dataset.styleIndex = styles.sheet.cssRules.length;
+                styles.sheet.insertRule(
+                    `#${listboxId} [role="option"]:not(.selected) {`
+                    + ` display: none;`
+                    + `}`
+                );
+            }
+            else {
+                let index = Number(btn.dataset.styleIndex);
+                index = styles.sheet.cssRules.length - 1 - index;
+                styles.sheet.deleteRule(index);
+                btn.dataset.styleIndex = '';
+            }
+        });
+        return btn;
+    }
+
     function makeHeaderBar() {
         let header = document.createElement('div');
         header.role = 'region';
@@ -179,17 +226,22 @@
             `[aria-controls="${listbox.id}"]`
         );
         let currentOption = e.target;
+        // choose non-hidden options, and filter out any other options
+        // that aren't visible
         let options = Array.from(
             listbox.querySelectorAll('[role="option"]:not([hidden])')
-        );
+        ).filter(e => e.checkVisibility());
         let currentIndex = options.indexOf(currentOption);
         let nextFocus, nextIndex;
+        let direction;
         switch (e.key) {
             case 'ArrowDown':
+                direction = 1;
                 nextIndex = (currentIndex + 1);
             case 'ArrowUp':
                 // if next index is set 
                 // (aka arrow down was hit), don't set it
+                direction ??= -1;
                 nextIndex ??= (options.length + currentIndex - 1);
                 nextIndex %= options.length;
                 nextFocus = options[nextIndex];
