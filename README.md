@@ -9,6 +9,9 @@ If you want to check the token values without needing to use ~~help, I recommend
 
 # colorContrastHelper
 Automatically updates the target element, and the issue description fields based on the contents of the issue description field, and copies the generic audit recommendation to your clipboard. Issue description field should take the contents copied to the clipboard when pressing ctr+shift+c in CCA. Issue description field can also take the tokens: ~~focus, ~~graphic. ~~focus is for color contrast issues related to a focus indicator. ~~graphic is for content that is placed against an image.
+
+Can handle: 1.4.3, 1.4.11, 1.4.1 (with use of color, I recommend modifying the issue text to be a little more descriptive)
+
 Important note: Due to toolbox quirkiness, the following should be done in order: 
 1. issue description field should be manually changed (such as adding a space, and then optionally deleting that space)
 2. the same should be done to the target element description
