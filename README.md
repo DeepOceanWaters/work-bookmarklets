@@ -55,7 +55,7 @@ Adds some basic styling to the various multi-selects that help me more easily us
 Used on Toolbox audit page while an issue is open. It shows up at the top of the screen. It can be used to:
 - search the pages multiselect
 - select an option from the pages multiselet (IMPORTANT NOTE: You still need to manually interact with the pages multiselect. I recommend CTRL+Click on an unselected option twice) Also note that when selecting on option, the multiselect should scroll the option into view and bold its text for ~10 seconds.
-- show only the currently selected pages
+- show only the currently selected pages in the combobox's associated listbox.
 
 # switchPage
 Switches between the first and second page of an audit in the toolbox. Audits almost never go above 200 issues. So far I have not had a single instance where I needed to view a third page.
