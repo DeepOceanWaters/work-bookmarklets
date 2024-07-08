@@ -4,6 +4,7 @@ Tokens can be formed as such:
 - ~~token
 - ~~token.subtoken.subtoken
 - ~~token.all (all will add the: issue, recommendation, and requirement; requirement typically stars with "ensure that...", recommendation is a default recommendation)
+
 If you want to check the token values without needing to use ~~help, I recommend searching the code file. The "tokens" object contains all the recommendation information.
 
 # colorContrastHelper
