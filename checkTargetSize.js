@@ -294,6 +294,21 @@
         loadAnnoations();
     }
 
+    /*
+    let targetSizeRule =
+            `.${this.getTargetSizeClassName()} {`
+            + ` position: absolute;`
+            + ` background: transparent;`
+            + ` border: 2px solid white;`
+            + ` outline: 2px dotted black;`
+            + ` outline-offset: -2px;`
+            + ` width: 24px;`
+            + ` height: 24px;`
+            + ` top: 50%;`
+            + ` left: 50%;`
+            + ` transform: translate(-50%, -50%);`
+            + `}`;*/
+            
     const loadAnnoations = () => {
         annotater.setup();
         /* specific to checkTargetSize */

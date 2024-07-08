@@ -1,5 +1,11 @@
 # addRecommendation
 replaces tokens inside the audit recommendation editor. Tokens are formed as such: ~~token. ~~help and ~~helpvalue will both provide a list of possible tokens. ~~help only shows the tokens, while ~~helpvalue shows a preview of the value that replaces the token.
+Tokens can be formed as such:
+- ~~token
+- ~~token.subtoken.subtoken
+- ~~token.all (all will add the: issue, recommendation, and requirement; requirement typically stars with "ensure that...", recommendation is a default recommendation)
+
+If you want to check the token values without needing to use ~~help, I recommend searching the code file. The "tokens" object contains all the recommendation information.
 
 # colorContrastHelper
 Automatically updates the target element, and the issue description fields based on the contents of the issue description field, and copies the generic audit recommendation to your clipboard. Issue description field should take the contents copied to the clipboard when pressing ctr+shift+c in CCA. Issue description field can also take the tokens: ~~focus, ~~graphic. ~~focus is for color contrast issues related to a focus indicator. ~~graphic is for content that is placed against an image.
@@ -10,6 +16,8 @@ Important note: Due to toolbox quirkiness, the following should be done in order
 
 # exposeAltText
 A simplistic way of visually exposing the alt text of images. Caution should be taken as the alt text is exposed in a simplistic manner - for example alt text provided in text near the image is not going to be caught as alt text.
+
+If you don't see a label for an image that's been highlighted on the page, you can click on the image to log both the text alternative and the image element in the console.
 
 # exposeElement
 Takes a space delineated list of CSS selectors, and uses CSS ::before pseudo-elements to try and expose the elements that match the CSS selectors.
@@ -43,6 +51,12 @@ Similar to expose functions. Visually exposes headings, accounts for ROLE=HEADIN
 
 # styleToolbox
 Adds some basic styling to the various multi-selects that help me more easily use these controls.
+
+# searchPage
+Used on Toolbox audit page while an issue is open. It shows up at the top of the screen. It can be used to:
+- search the pages multiselect
+- select an option from the pages multiselet (IMPORTANT NOTE: You still need to manually interact with the pages multiselect. I recommend CTRL+Click on an unselected option twice) Also note that when selecting on option, the multiselect should scroll the option into view and bold its text for ~10 seconds.
+- show only the currently selected pages in the combobox's associated listbox.
 
 # switchPage
 Switches between the first and second page of an audit in the toolbox. Audits almost never go above 200 issues. So far I have not had a single instance where I needed to view a third page.
