@@ -1,9 +1,9 @@
 # addRecommendation
 replaces tokens inside the audit recommendation editor. Tokens are formed as such: ~~token. ~~help and ~~helpvalue will both provide a list of possible tokens. ~~help only shows the tokens, while ~~helpvalue shows a preview of the value that replaces the token.
 Tokens can be formed as such:
-~~token
-~~token.subtoken.subtoken
-~~token.all (all will add the: issue, recommendation, and requirement; requirement typically stars with "ensure that...", recommendation is a default recommendation)
+- ~~token
+- ~~token.subtoken.subtoken
+- ~~token.all (all will add the: issue, recommendation, and requirement; requirement typically stars with "ensure that...", recommendation is a default recommendation)
 If you want to check the token values without needing to use ~~help, I recommend searching the code file. The "tokens" object contains all the recommendation information.
 
 # colorContrastHelper
